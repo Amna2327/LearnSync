@@ -21,7 +21,7 @@ document.getElementById("schedule_btn").addEventListener("click", async()=> {
 
 document.getElementById("st-dept-btn").addEventListener("click", async()=>{
     try{
-        const res = await fetch("/filter_studentdept");
+        const res = await fetch("/student/with-department");
         const data = await res.json();
         renderTable(data, "st_dept_tbl");
     } catch(err){
