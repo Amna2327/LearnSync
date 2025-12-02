@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>LearnSync Signup</title>
+    </head>
+    <body>
+        <h2>Create a LearnSync Account</h2>
+        <form id="signupForm">
+            <label>Name:</label><br>
+            <input type="text" id="name" required><br><br>
+
+            <label>Email:</label><br>
+            <input type="email" id="email" required><br><br>
+            
+            <label>Password:</label><br>
+            <input type="password" id="password" required><br><br>
+            
+            <label>Role:</label><br>
+            <select id="role" required>
+            <option value="student">Student</option>
+            <option value="instructor">Instructor</option>
+            <option value="admin">Admin</option>
+            </select><br><br>
+            
+            <label>Time Zone:</label><br>
+            <select id="timeZone" required>
+            <!-- UTC -->
+            <option value="UTC">UTC</option>
+
+            <!-- Africa -->
+            <option value="Africa/Accra">Accra / Ghana</option>
+            <option value="Africa/Algiers">Algiers / Algeria</option>
+            <option value="Africa/Cairo">Cairo / Egypt</option>
+            <option value="Africa/Johannesburg">Johannesburg / South Africa</option>
+            <option value="Africa/Lagos">Lagos / Nigeria</option>
+            <option value="Africa/Nairobi">Nairobi / Kenya</option>
+
+            <!-- America -->
+            <option value="America/Argentina/Buenos_Aires">Buenos Aires / Argentina</option>
+            <option value="America/Chicago">Chicago / USA</option>
+            <option value="America/Denver">Denver / USA</option>
+            <option value="America/Los_Angeles">Los Angeles / USA</option>
+            <option value="America/New_York">New York / USA</option>
+            <option value="America/Sao_Paulo">Sao Paulo / Brazil</option>
+            <option value="America/Toronto">Toronto / Canada</option>
+
+            <!-- Asia Middle East -->
+            <option value="Asia/Amman">Amman / Jordan</option>
+            <option value="Asia/Baghdad">Baghdad / Iraq</option>
+            <option value="Asia/Beirut">Beirut / Lebanon</option>
+            <option value="Asia/Bahrain">Bahrain</option>
+            <option value="Asia/Dubai">Dubai / UAE</option>
+            <option value="Asia/Kuwait">Kuwait</option>
+            <option value="Asia/Riyadh">Riyadh / Saudi Arabia</option>
+            <option value="Asia/Tehran">Tehran / Iran</option>
+
+            <!-- Asia South East -->
+            <option value="Asia/Bangkok">Bangkok / Thailand</option>
+            <option value="Asia/Ho_Chi_Minh">Ho Chi Minh / Vietnam</option>
+            <option value="Asia/Jakarta">Jakarta / Indonesia</option>
+            <option value="Asia/Karachi">Karachi / Pakistan</option>
+            <option value="Asia/Kuala_Lumpur">Kuala Lumpur / Malaysia</option>
+            <option value="Asia/Dhaka">Dhaka / Bangladesh</option>
+            <option value="Asia/Manila">Manila / Philippines</option>
+            <option value="Asia/Phnom_Penh">Phnom Penh / Cambodia</option>
+            <option value="Asia/Singapore">Singapore / Singapore</option>
+            <option value="Asia/Vientiane">Vientiane / Laos</option>
+            <option value="Asia/Yangon">Yangon / Myanmar</option>
+            <option value="Asia/Kolkata">Kolkata / India</option>
+
+
+            <!-- Asia East -->
+            <option value="Asia/Seoul">Seoul / South Korea</option>
+            <option value="Asia/Shanghai">Shanghai / China</option>
+            <option value="Asia/Tokyo">Tokyo / Japan</option>
+
+            <!-- Europe -->
+            <option value="Europe/Berlin">Berlin / Germany</option>
+            <option value="Europe/London">London / UK</option>
+            <option value="Europe/Moscow">Moscow / Russia</option>
+            <option value="Europe/Paris">Paris / France</option>
+            <option value="Europe/Rome">Rome / Italy</option>
+
+            <!-- Australia / Oceania -->
+            <option value="Australia/Brisbane">Brisbane / Australia</option>
+            <option value="Australia/Melbourne">Melbourne / Australia</option>
+            <option value="Australia/Perth">Perth / Australia</option>
+            <option value="Australia/Sydney">Sydney / Australia</option>
+
+
+        </select><br><br>
+        <button type="submit">Signup</button>
+        
+        </form>
+        <h5> Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 digit mwith minimum length of 8 characters. </h5>
+
+        <p id="message" style="color:red;"></p>
+
+        <script src="signup.js"></script>
+    </body>
+</html>
