@@ -3,12 +3,14 @@
 ### - Backend Additions
 Added MiddleWare for JWT handling
 
+.env file has necessary JWT tokenization info 
+
 Uses JWT tokens for preservation of logged-in user's info
 
 Password hashing done using bcrypt 
 
 - Landing page: buttons for login and signup
-- Signup: password strength check, Timezone selection
+- Signup: password strength check, Timezone and role selection (instructor/student)
 - Login: (email and password) Dashboard page loaded after logging in
 
 Installation Codes: 
