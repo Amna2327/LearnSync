@@ -4,7 +4,7 @@ const message = document.getElementById('message');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
+
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
@@ -22,14 +22,21 @@ form.addEventListener('submit', async (e) => {
       return;
     }
 
-    // Save JWT in localStorage
+    // Save JWT + role + status
     localStorage.setItem('jwt', data.token);
-    
-    // Frontend debug: show user role
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('status', data.status);
+
     console.log("[Frontend DEBUG] Logged-in user role:", data.role);
 
-    // Redirect to dashboard
-    window.location.href = '/dashboard.html';
+    // Redirect based on role
+    if (data.role === "admin") {
+      window.location.href = "/admin/dashboard_admin.html";
+    } else if (data.role === "instructor") {
+      window.location.href = "/instructor/dashboard_instructor.html";
+    } else {
+      window.location.href = "/student/dashboard_student.html";
+    }
 
   } catch (err) {
     message.textContent = "Error connecting to server";
