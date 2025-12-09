@@ -209,14 +209,23 @@ async function updateInstructorDetails(
     );
 }
 
+
 // Fetch student details
 async function getStudentDetails(studentId) {
     const { rows } = await pool.query(
         "SELECT * FROM student_details WHERE student_id = $1",
         [studentId]
     );
-    return rows[0] || null;
+
+    const data = rows[0] || null;
+
+    if (data && typeof data.subject_tags === "string") {
+        data.subject_tags = JSON.parse(data.subject_tags);
+    }
+
+    return data;
 }
+
 
 // Insert new student details (after signup)
 async function insertStudentDetails(studentId, educationLevel = null, subjectTags = []) {
