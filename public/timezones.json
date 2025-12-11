@@ -1,0 +1,55 @@
+[
+    { "value": "UTC", "label": "UTC" },
+
+    { "value": "Africa/Accra", "label": "Accra / Ghana" },
+    { "value": "Africa/Algiers", "label": "Algiers / Algeria" },
+    { "value": "Africa/Cairo", "label": "Cairo / Egypt" },
+    { "value": "Africa/Johannesburg", "label": "Johannesburg / South Africa" },
+    { "value": "Africa/Lagos", "label": "Lagos / Nigeria" },
+    { "value": "Africa/Nairobi", "label": "Nairobi / Kenya" },
+
+    { "value": "America/Argentina/Buenos_Aires", "label": "Buenos Aires / Argentina" },
+    { "value": "America/Chicago", "label": "Chicago / USA" },
+    { "value": "America/Denver", "label": "Denver / USA" },
+    { "value": "America/Los_Angeles", "label": "Los Angeles / USA" },
+    { "value": "America/New_York", "label": "New York / USA" },
+    { "value": "America/Sao_Paulo", "label": "Sao Paulo / Brazil" },
+    { "value": "America/Toronto", "label": "Toronto / Canada" },
+
+    { "value": "Asia/Amman", "label": "Amman / Jordan" },
+    { "value": "Asia/Baghdad", "label": "Baghdad / Iraq" },
+    { "value": "Asia/Beirut", "label": "Beirut / Lebanon" },
+    { "value": "Asia/Bahrain", "label": "Bahrain" },
+    { "value": "Asia/Dubai", "label": "Dubai / UAE" },
+    { "value": "Asia/Kuwait", "label": "Kuwait" },
+    { "value": "Asia/Riyadh", "label": "Riyadh / Saudi Arabia" },
+    { "value": "Asia/Tehran", "label": "Tehran / Iran" },
+
+    { "value": "Asia/Bangkok", "label": "Bangkok / Thailand" },
+    { "value": "Asia/Ho_Chi_Minh", "label": "Ho Chi Minh / Vietnam" },
+    { "value": "Asia/Jakarta", "label": "Jakarta / Indonesia" },
+    { "value": "Asia/Karachi", "label": "Karachi / Pakistan" },
+    { "value": "Asia/Kuala_Lumpur", "label": "Kuala Lumpur / Malaysia" },
+    { "value": "Asia/Dhaka", "label": "Dhaka / Bangladesh" },
+    { "value": "Asia/Manila", "label": "Manila / Philippines" },
+    { "value": "Asia/Phnom_Penh", "label": "Phnom Penh / Cambodia" },
+    { "value": "Asia/Singapore", "label": "Singapore / Singapore" },
+    { "value": "Asia/Vientiane", "label": "Vientiane / Laos" },
+    { "value": "Asia/Yangon", "label": "Yangon / Myanmar" },
+    { "value": "Asia/Kolkata", "label": "Kolkata / India" },
+
+    { "value": "Asia/Seoul", "label": "Seoul / South Korea" },
+    { "value": "Asia/Shanghai", "label": "Shanghai / China" },
+    { "value": "Asia/Tokyo", "label": "Tokyo / Japan" },
+
+    { "value": "Europe/Berlin", "label": "Berlin / Germany" },
+    { "value": "Europe/London", "label": "London / UK" },
+    { "value": "Europe/Moscow", "label": "Moscow / Russia" },
+    { "value": "Europe/Paris", "label": "Paris / France" },
+    { "value": "Europe/Rome", "label": "Rome / Italy" },
+
+    { "value": "Australia/Brisbane", "label": "Brisbane / Australia" },
+    { "value": "Australia/Melbourne", "label": "Melbourne / Australia" },
+    { "value": "Australia/Perth", "label": "Perth / Australia" },
+    { "value": "Australia/Sydney", "label": "Sydney / Australia" }
+]

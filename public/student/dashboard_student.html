@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+</head>
+
+<body>
+  <h2>Student Dashboard</h2>
+  <p id="userInfo"></p>
+
+  <!-- Dashboard content -->
+  <div id="studentContent">
+    <button id="editProfileBtn">Update Profile</button>
+
+    <h3>All Sessions</h3>
+    <ul id="allSessions"></ul>
+  </div>
+
+  <!-- Profile form for first-time students -->
+  <div id="studentProfileForm" style="display:none">
+    <h3>Complete Your Profile</h3>
+    <form id="profileForm">
+      <label>Education Level:</label>
+      <input type="text" name="education_level" required /><br />
+      <label>Subjects (comma separated):</label>
+      <input type="text" name="subject_tags" required /><br />
+      <button type="submit">Save Profile</button>
+    </form>
+    <p id="profileMessage"></p>
+  </div>
+
+  <button id="book-ssn-btn">Book Session</button>
+
+  <script src="dashboard_student.js"></script>
+</body>
+
+</html>

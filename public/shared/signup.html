@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>LearnSync Signup</title>
+    </head>
+    <body>
+        <h2>Create a LearnSync Account</h2>
+        <form id="signupForm">
+            <label>Name:</label><br>
+            <input type="text" id="name" required><br><br>
+
+            <label>Email:</label><br>
+            <input type="email" id="email" required><br><br>
+            
+            <label>Password:</label><br>
+            <input type="password" id="password" required><br><br>
+            
+            <label>Role:</label><br>
+            <select id="role" required>
+                <option value="student">Student</option>
+                <option value="instructor">Instructor</option>
+            <!-- some front-end visuals would be good here like 2 buttons to specify each role (select one from two) instead of simple dropdown -->
+            </select><br><br>
+            
+            <label>Time Zone:</label><br>
+            <select id="timeZone" required>
+            <!-- UTC -->
+            <option value="UTC">UTC</option>
+
+
+        </select><br><br>
+        <button type="submit">Signup</button>
+        
+        </form>
+        <h5> Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 digit mwith minimum length of 8 characters. </h5>
+
+        <p id="message" style="color:red;"></p>
+
+        <script src="signup.js"></script>
+    </body>
+</html>

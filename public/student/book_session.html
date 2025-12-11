@@ -1,0 +1,58 @@
+<!-- 
+//fill in info for the session
+//filter instructor by subject tags and time zone (can have checkmarks), 
+get a list of instructors and select a single instructor after which we return to the session booking page. 
+Either send the session request to the specific instructor or cancel it.
+Session is saved if instructor also accepts it and a notification is sent to the student 
+ that their session request was accepted or declined.
+
+filter-btn calls /instructor/filter with passed values and gets a list of instructors 
+matching the entered tags and timezones. The student can then select an instructor from the list to book a session with them.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Session</title>
+</head>
+<body>
+
+    <h2>Create Session</h2>
+
+    <!-- SESSION BASIC INFO -->
+     
+    <label>Session Description</label><br>
+    <textarea id="session_desc"></textarea><br><br>
+    
+    <label>Start Time</label><br>
+    <input type="datetime-local" id="start_time"><br><br> <!-- 🟥 -->
+
+    <label>Duration (minutes)</label><br>
+    <input type="number" id="duration_minutes" min="1"><br><br>
+
+    <label>Selected Instructor ID</label><br>
+    <input type="text" id="selected_instructor" readonly><br><br>
+
+
+    <h3>Filter Instructors (Leave empty for no filters)</h3>
+
+    <label>Subject Tags (comma-separated)</label><br>
+    <input type="text" id="subject_tags"><br><br>
+
+    <select id="time_zone">
+        <option value="">Select Time Zone</option>
+    </select><br><br>
+
+    <button id="filter_btn">Filter</button>
+
+    <h3>Matching Instructors</h3>
+    <div id="filter-results"></div>
+
+    <br><br>
+    <button id="submit_btn">Send Session Request</button>
+
+    <script src="book_session.js"></script>
+
+</body>
+</html>

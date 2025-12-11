@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Dashboard</title>
+</head>
+
+<body>
+
+    <h2>Instructor Dashboard</h2>
+    <p id="userInfo"></p>
+
+    <!-- Main dashboard content for approved instructors -->
+    <div id="instructorContent" style="display: none;">
+        <h3>My Courses / Demo Materials</h3>
+        <ul id="myCourses"></ul>
+
+        <h3>Pending Approvals (student requests)</h3>
+        <ul id="pendingApprovals"></ul>
+
+        <h3>Approved Sessions / Schedule</h3>
+        <table id="approvedSessions" border="1">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Course / Topic</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3> ALL SESSIONS</h3>
+        <ul id="allSessions"></ul>
+    </div>
+
+    <!-- Upload form for pending instructors -->
+    <div id="pendingInstructorUpload" style="display: none;">
+        <h3>Upload your certifications and demo materials</h3>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label>Certifications (PDF/Image):</label><br>
+            <input type="file" name="certifications" multiple><br><br>
+
+            <label>Demo Materials (PDF/Image/Video):</label><br>
+            <input type="file" name="demo_material" multiple><br><br>
+
+            <label>Subjects you teach (comma separated):</label><br>
+            <input type="text" name="subject_tags" placeholder="Math, Physics, Chemistry"><br><br>
+
+            <label>Education Levels you teach (comma separated):</label><br>
+            <input type="text" name="education_level_tags" placeholder="High School, Undergraduate"><br><br>
+
+            <button type="submit">Submit Profile</button>
+        </form>
+        <p id="uploadMessage"></p>
+    </div>
+
+
+    <script src="dashboard_instructor.js"></script>
+</body>
+
+</html>
