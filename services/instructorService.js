@@ -1,5 +1,6 @@
 import { getInstructorDetails, insertInstructorDetails, updateInstructorDetails, getInstructorsByTags, getInstructorSessions } from "../databases/userDatabase.js";
 import { DateTime } from "luxon";
+import { acceptSessionWithPayment_transactional, rejectSession } from "../databases/sessionDatabase.js";
 
 /**
  * Save or update instructor profile including:
@@ -55,9 +56,9 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
         console.log("[DEBUG] Raw session start_time type:", typeof s.start_time, s.start_time);
 
         // Convert to Luxon DateTime — use fromJSDate if it's a Date object
-        const dt = (s.start_time instanceof Date) 
-                   ? DateTime.fromJSDate(s.start_time, { zone: 'utc' })
-                   : DateTime.fromISO(s.start_time, { zone: 'utc' });
+        const dt = (s.start_time instanceof Date)
+            ? DateTime.fromJSDate(s.start_time, { zone: 'utc' })
+            : DateTime.fromISO(s.start_time, { zone: 'utc' });
 
         console.log("[DEBUG] Luxon DateTime valid?:", dt.isValid, dt.toString());
 
@@ -65,8 +66,38 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
 
         console.log(`[DEBUG] Session ${s.session_id}: UTC=${s.start_time}, Local(${userTimeZone})=${localTime}`);
 
-        return { ...s, local_start_time: localTime };
+        return {
+            ...s,
+            local_start_time: localTime,
+            payment_status: s.payment_status || 'N/A'
+        };
     });
 
     return convertedSessions;
 }
+
+/**
+ * Called when instructor accepts/rejects a session.
+ * - If accept: updates session.status to 'accepted', sets amount, creates payment entry (pending).
+ * - If reject: updates session.status to 'rejected'.
+ *
+ * Returns the updated session row (object) on success, otherwise null/false.
+ */
+
+// Update session status by instructor
+export async function updateSessionStatusByInstructor(sessionId, instructorId, action, amount) {
+    if (action === "accept") {
+        // Use the transactional DB function
+        const result = await acceptSessionWithPayment_transactional(sessionId, instructorId, amount);
+        return result ? result.session : null;
+
+    } else if (action === "reject") {
+        const session = await rejectSession(sessionId, instructorId);
+        return session || null;
+
+    } else {
+        return null;
+    }
+}
+
+

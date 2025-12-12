@@ -1,5 +1,6 @@
 import { saveInstructorFiles, getTaggedInstructorInfo, getInstructorSessionsService } from "../services/instructorService.js";
 import { getInstructorDetails } from "../databases/userDatabase.js";
+import { updateSessionStatusByInstructor } from "../services/instructorService.js";
 // import { getMaxListeners } from "events";
 
 export async function getInstructorProfile(req, res) {
@@ -106,4 +107,28 @@ export async function getInstructorSessionsForDashboard(req, res) {
         return res.status(500).json({ error: "Server error while fetching sessions" });
     }
 
+}
+
+// instructorController.js (add / replace handleSessionRequest)
+export async function handleSessionRequest(req, res) {
+    try {
+        const instructorId = req.user.id;
+        const { session_id, action, amount } = req.body;
+
+        if (!session_id || !action || (action === "accept" && (!amount || amount <= 0))) {
+            return res.status(400).json({ success: false, error: "Missing required fields or invalid amount" });
+        }
+
+        const updated = await updateSessionStatusByInstructor(session_id, instructorId, action, amount);
+
+        if (!updated) {
+            return res.status(404).json({ success: false, error: "Session not found or you are not authorized" });
+        }
+
+        res.json({ success: true, message: `Session ${action}ed successfully` });
+
+    } catch (err) {
+        console.error("Error in handleSessionRequest:", err);
+        res.status(500).json({ success: false, error: "Server error" });
+    }
 }

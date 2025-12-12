@@ -1,10 +1,10 @@
 import express from "express";
 import { verifyToken } from "../middlewares/jwtMiddleware.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
-import { uploadInstructorFiles, filterInstructors, getInstructorSessionsForDashboard } from "../controllers/instructorController.js";
+import { uploadInstructorFiles, filterInstructors, getInstructorSessionsForDashboard, handleSessionRequest } from "../controllers/instructorController.js";
 
 const router = express.Router();
- 
+
 // Upload instructor files
 router.post(
     '/upload-profile',
@@ -19,5 +19,6 @@ router.post(
 // get instructors filtered by subject tags and/or time_zone
 router.post('/filter', verifyToken, filterInstructors);
 router.get("/all_sessions", verifyToken, getInstructorSessionsForDashboard);
+router.post("/session_action", verifyToken, handleSessionRequest);
 
 export default router;
