@@ -1,7 +1,7 @@
 // public/student/dashboard_student.js
 
 // view all sessions, display converted local time zone instead of utc from database
-async function viewAllSessions(token) { 
+async function viewAllSessions(token) {
   console.log("viewAllSessions called with token:", token);
 
   try {
@@ -33,7 +33,7 @@ async function viewAllSessions(token) {
       // Local (browser time)
       let localStr = 'Unknown';
       if (s.local_start_time) {
-        const localDate = new Date(s.local_start_time); 
+        const localDate = new Date(s.local_start_time);
         // convert to browser local time
         localStr = localDate.toLocaleString('en-US', {
           weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
@@ -64,7 +64,7 @@ async function loadDashboard() {
   try {
     // Fetch basic user info
     const dashRes = await fetch("/dashboard", {
-      headers: { "Authorization": "Bearer " +  localStorage.getItem("jwt") }
+      headers: { "Authorization": "Bearer " + localStorage.getItem("jwt") }
     });
 
     if (!dashRes.ok) {
@@ -112,14 +112,14 @@ async function loadDashboard() {
 
     //setup sesssion booking button
     setupBookSessionButton();
-    
+
     // Enable update button
     enableProfileEditing(profile, token);
 
     // Trigger fetching all sessions from server
     console.log("Triggering viewAllSessions now...");
     await viewAllSessions(token);
-    
+
   } catch (err) {
     console.error("Error loading dashboard:", err);
   }

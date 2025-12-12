@@ -195,7 +195,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
     // Case 1: No filters
     if (noTimezone && noSubjects) {
         return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
              FROM users u
              JOIN instructor_details in_d ON u.id = in_d.instructor_id
              WHERE u.role = 'instructor' AND u.status = 'active'
@@ -206,7 +206,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
     // Case 2: Only timezone
     if (!noTimezone && noSubjects) {
         return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
              FROM users u
              JOIN instructor_details in_d ON u.id = in_d.instructor_id
              WHERE u.role = 'instructor' AND u.status = 'active'
@@ -218,7 +218,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
     // Case 3: Only subject tags
     if (noTimezone && !noSubjects) {
         return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
              FROM users u
              JOIN instructor_details in_d ON u.id = in_d.instructor_id
              WHERE u.role = 'instructor' AND u.status = 'active'
@@ -229,7 +229,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
 
     // Case 4: Both filters
     return pool.query(
-        `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
+        `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
          FROM users u
          JOIN instructor_details in_d ON u.id = in_d.instructor_id
          WHERE u.role = 'instructor' AND u.status = 'active'
