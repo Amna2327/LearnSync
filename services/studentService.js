@@ -32,26 +32,72 @@ export async function updateStudentProfileService(studentId, educationLevel, sub
 // Get student sessions with timezone conversion
 export async function getStudentSessionsService(studentId, userTimeZone) {
     const sessions = await getStudentSessions(studentId);
+    const nowUtc = DateTime.utc(); // Current UTC time
 
     const convertedSessions = sessions.map(s => {
-        console.log("[DEBUG] Raw session start_time type:", typeof s.start_time, s.start_time);
+        // Robust UTC parsing
 
-        // Convert to Luxon DateTime — use fromJSDate if it's a Date object
-        const dt = (s.start_time instanceof Date)
-            ? DateTime.fromJSDate(s.start_time, { zone: 'utc' })
-            : DateTime.fromISO(s.start_time, { zone: 'utc' });
 
-        console.log("[DEBUG] Luxon DateTime valid?:", dt.isValid, dt.toString());
+        let dtUtc;
+        if (typeof s.start_time === "string") {
+            // Normalize string to ISO-8601
+            let isoString = s.start_time.replace(' ', 'T'); // Replace space with T
+            if (!isoString.endsWith('Z')) {
+                isoString += 'Z'; // Treat as UTC
+            }
+            dtUtc = DateTime.fromISO(isoString, { zone: 'utc' });
+        } else if (s.start_time instanceof Date) {
+            dtUtc = DateTime.fromJSDate(s.start_time, { zone: 'utc' });
+        } else {
+            console.error("Invalid start_time:", s.start_time);
+            return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+        }
 
-        const localTime = dt.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
 
-        console.log(`[DEBUG] Session ${s.session_id}: UTC=${s.start_time}, Local(${userTimeZone})=${localTime}`);
+        if (!dtUtc.isValid) {
+            console.error("Invalid Luxon DateTime:", s.start_time);
+            return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+        }
 
-        return { ...s, local_start_time: localTime };
+        // Local time for display
+        const localTime = dtUtc.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
+        console.log(localTime)
+        // Initialize meeting info
+        let meetingLink = s.meeting_link || null;
+        let meetingScheduled = !!meetingLink;
+
+        if (meetingLink) {
+            const endDtUtc = dtUtc.plus({ minutes: Number(s.duration_minutes) }); // Session end in UTC
+
+            if (nowUtc >= endDtUtc) {
+                // Session completely finished
+                meetingLink = null;
+                meetingScheduled = false;
+            } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 10) {
+                // Session in future (>10 min away), hide link
+                meetingLink = null;
+                meetingScheduled = true;
+            } else {
+                // Session within 10 min or ongoing: show link
+                meetingScheduled = true;
+            }
+        }
+
+        return {
+            ...s,
+            local_start_time: localTime,
+            payment_status: s.payment_status || null,
+            meeting_link: meetingLink,
+            meeting_scheduled: meetingScheduled
+        };
     });
 
     return convertedSessions;
 }
+
+
+
+
 
 /* existing functions here... */
 

@@ -240,15 +240,28 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
 }
 
 async function getStudentSessions(userId) {
-
     const { rows } = await pool.query(
-        `SELECT s.session_id, s.description, s.student_id, s.instructor_id, s.start_time, s.duration_minutes, s.status
+        `SELECT 
+            s.session_id,
+            s.description,
+            s.student_id,
+            s.instructor_id,
+            s.start_time::text AS start_time, -- get as string
+            s.duration_minutes,
+            s.status,
+            p.status AS payment_status,
+            m.link AS meeting_link
          FROM sessions s
+         LEFT JOIN payments p
+           ON p.session_id = s.session_id
+         LEFT JOIN meetings m
+           ON m.session_id = s.session_id
          WHERE s.student_id = $1`,
         [userId]
     );
     return rows;
 }
+
 async function getInstructorSessions(userId) {
     const { rows } = await pool.query(
         `SELECT s.session_id, s.description, s.student_id, s.instructor_id, s.start_time, s.duration_minutes, s.status,

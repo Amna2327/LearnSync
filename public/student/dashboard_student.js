@@ -80,18 +80,20 @@ function renderSessions(sessions) {
   sessions.forEach(s => {
     const li = document.createElement("li");
 
-    if (
-      s.status === "scheduled" &&
-      (!s.payment_status || ["success"].includes(s.payment_status.toLowerCase()))
-    ) {
-      li.textContent = `${s.description} | ${s.status} | Payment: ${s.payment_status || "paid"}`;
+    // Payment status
+    let paymentText = "unpaid";
+    if (!s.payment_status) {
+      paymentText = "unpaid";
+    } else if (s.payment_status.toLowerCase() === "success") {
+      paymentText = "paid";
+    } else {
+      paymentText = s.payment_status.toLowerCase();
     }
 
-    else {
-      li.textContent = `${s.description} | ${s.status} | Payment: ${s.payment_status || "unpaid"}`;
-
-    }
-
+    // Base text
+    li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
+    li.textContent += ` | Scheduled at: ${s.local_start_time}`;
+    // Show Pay Now button if eligible
     if (
       s.status === "accepted" &&
       (!s.payment_status || ["pending", "failed"].includes(s.payment_status.toLowerCase()))
@@ -103,10 +105,18 @@ function renderSessions(sessions) {
       li.appendChild(btn);
     }
 
+    // Handle meeting link visibility
+    if (s.meeting_scheduled && s.meeting_link) {
+      // Link exists and scheduled: show immediately
+      li.textContent += ` | Zoom Link: ${s.meeting_link}`;
+    } else if (s.meeting_scheduled && !s.meeting_link) {
+      // Scheduled but link hidden (more than 10 min away)
+      li.textContent += ` | Meeting scheduled. Link will be shared 10 minutes before session.`;
+    }
+
     allUl.appendChild(li);
   });
 }
-
 
 // Handle Pay Now click
 async function handlePayNow(sessionId, li) {
@@ -124,10 +134,7 @@ async function handlePayNow(sessionId, li) {
     });
     const data = await res.json();
     if (data.success) {
-      alert(`Payment successful! Zoom link: ${data.zoom_link}`);
-      const statusSpan = document.createElement("span");
-      statusSpan.textContent = ` | Payment: Success | Zoom Link: ${data.zoom_link}`;
-      li.appendChild(statusSpan);
+      alert(`Payment successful! `);
 
     } else {
       alert(data.message || "Payment failed");
