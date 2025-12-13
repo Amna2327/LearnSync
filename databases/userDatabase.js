@@ -262,6 +262,75 @@ async function getInstructorSessions(userId) {
 }
 
 
+// ============================
+// PAY NOW / TRANSACTION HELPERS
+// ============================
+
+// Get a session by ID
+async function getSessionById(client, sessionId) {
+    const { rows } = await client.query(
+        `SELECT s.session_id, s.student_id, s.instructor_id, s.status
+         FROM sessions s
+         WHERE s.session_id = $1`,
+        [sessionId]
+    );
+    return rows[0] || null;
+}
+
+// Get pending payment for a session
+async function getPendingPaymentBySession(client, sessionId) {
+    const { rows } = await client.query(
+        `SELECT * FROM payments
+         WHERE session_id = $1 AND status IN ('pending', 'failed')`,
+        [sessionId]
+    );
+    return rows[0] || null;
+}
+
+// Update payment status
+async function updatePaymentStatus(client, transactionId, newStatus) {
+    const { rows } = await client.query(
+        `UPDATE payments
+         SET status = $1
+         WHERE transaction_id = $2
+         RETURNING *`,
+        [newStatus, transactionId]
+    );
+    return rows[0] || null;
+}
+
+
+// Get a free Zoom account (mock for now)
+async function getFreeZoomAccount(client) {
+    const { rows } = await client.query(
+        `SELECT id, name, account_id FROM zoom_accounts ORDER BY random() LIMIT 1`
+    );
+    return rows[0] || null;
+}
+
+// Insert a meeting
+async function insertMeeting(client, { session_id, zoom_account_id, link }) {
+    const { rows } = await client.query(
+        `INSERT INTO meetings (session_id, zoom_account_id, link)
+         VALUES ($1, $2, $3)
+         RETURNING *`,
+        [session_id, zoom_account_id, link]
+    );
+    return rows[0] || null;
+}
+
+// Update session status
+async function updateSessionStatus(client, sessionId, newStatus) {
+    const { rows } = await client.query(
+        `UPDATE sessions
+         SET status = $1
+         WHERE session_id = $2
+         RETURNING *`,
+        [newStatus, sessionId]
+    );
+    return rows[0] || null;
+}
+
 export {
     createUser,
     findUserByEmail,
@@ -280,5 +349,11 @@ export {
 
     getInstructorsByTags,
     getStudentSessions,
-    getInstructorSessions
+    getInstructorSessions,
+    getSessionById,
+    getPendingPaymentBySession,
+    updatePaymentStatus,
+    getFreeZoomAccount,
+    insertMeeting,
+    updateSessionStatus
 };
