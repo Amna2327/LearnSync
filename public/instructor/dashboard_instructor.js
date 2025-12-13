@@ -1,4 +1,10 @@
 // View all sessions feature
+function formatLocalTime(iso) {
+  return iso
+    .replace("T", " ")
+    .replace(/:\d{2}\+\d{2}:\d{2}$/, "");
+}
+
 async function viewAllSessions(token) {
   try {
     const res = await fetch("/instructor/all_sessions", {
@@ -38,12 +44,16 @@ function renderSessions(sessions) {
 
     // Base text
     li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
-    li.textContent += ` | Scheduled at: ${s.local_start_time}`;
+    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)}`;
 
     // Handle meeting link visibility
     if (s.meeting_scheduled && s.meeting_link) {
-      // Link exists and scheduled: show immediately
-      li.textContent += ` | Zoom Link: ${s.meeting_link}`;
+      const link = document.createElement("a");
+      link.href = s.meeting_link;
+      link.textContent = "Join Zoom";
+      link.target = "_blank"; // open in new tab
+      li.appendChild(document.createTextNode(" | Zoom Link: "));
+      li.appendChild(link);
     } else if (s.meeting_scheduled && !s.meeting_link) {
       // Scheduled but link hidden (more than 10 min away)
       li.textContent += ` | Meeting scheduled. Link will be shared 10 minutes before session.`;
@@ -73,18 +83,19 @@ async function loadPendingApprovals(token) {
       const li = document.createElement("li");
 
       li.innerHTML = `
-        <b>Student:</b> ${s.student_id || s.student_user_id} |
-        <b>${s.description}</b> |
-        <b>${(s.local_start_time).toLocaleString()}</b>
-        <br>
-        Amount: <input type="number" id="amount_${s.session_id}" placeholder="Enter amount" min="1">
-        <button onclick="handleApproval(${s.session_id}, 'accept')">Accept</button>
-        <button onclick="handleApproval(${s.session_id}, 'reject')">Reject</button>
-        <hr>
-      `;
+    <b>Student:</b> ${s.student_id || s.student_user_id} |
+    <b>${s.description}</b> |
+    <b>${formatLocalTime(s.local_start_time)}</b>
+    <br>
+    Amount: <input type="number" id="amount_${s.session_id}" min="1">
+    <button onclick="handleApproval(${s.session_id}, 'accept')">Accept</button>
+    <button onclick="handleApproval(${s.session_id}, 'reject')">Reject</button>
+    <hr>
+  `;
 
       ul.appendChild(li);
     });
+
 
   } catch (err) {
     console.error("Error loading pending approvals:", err);

@@ -51,6 +51,11 @@ async function loadDashboard() {
   }
 }
 
+function formatLocalTime(iso) {
+  return iso
+    .replace("T", " ")
+    .replace(/:\d{2}\+\d{2}:\d{2}$/, "");
+}
 // Fetch and display all sessions
 async function viewAllSessions(token) {
   try {
@@ -92,7 +97,8 @@ function renderSessions(sessions) {
 
     // Base text
     li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
-    li.textContent += ` | Scheduled at: ${s.local_start_time}`;
+    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)}`;
+
     // Show Pay Now button if eligible
     if (
       s.status === "accepted" &&
@@ -100,16 +106,21 @@ function renderSessions(sessions) {
     ) {
       const btn = document.createElement("button");
       btn.textContent = "Pay Now";
-      btn.addEventListener("click", () => handlePayNow(s.session_id, li));
+      btn.addEventListener("click", () => handlePayNow(s.session_id, btn));
       li.appendChild(document.createTextNode(" "));
       li.appendChild(btn);
     }
 
     // Handle meeting link visibility
     if (s.meeting_scheduled && s.meeting_link) {
-      // Link exists and scheduled: show immediately
-      li.textContent += ` | Zoom Link: ${s.meeting_link}`;
-    } else if (s.meeting_scheduled && !s.meeting_link) {
+      const link = document.createElement("a");
+      link.href = s.meeting_link;
+      link.textContent = "Join Zoom";
+      link.target = "_blank"; // open in new tab
+      li.appendChild(document.createTextNode(" | Zoom Link: "));
+      li.appendChild(link);
+    }
+    else if (s.meeting_scheduled && !s.meeting_link) {
       // Scheduled but link hidden (more than 10 min away)
       li.textContent += ` | Meeting scheduled. Link will be shared 10 minutes before session.`;
     }
@@ -119,7 +130,7 @@ function renderSessions(sessions) {
 }
 
 // Handle Pay Now click
-async function handlePayNow(sessionId, li) {
+async function handlePayNow(sessionId, btn) {
   const token = localStorage.getItem("jwt");
   if (!token) return alert("Not authenticated");
 
@@ -132,10 +143,23 @@ async function handlePayNow(sessionId, li) {
       },
       body: JSON.stringify({ session_id: sessionId })
     });
-    const data = await res.json();
+
+    try {
+      btn.disabled = true;
+      const data = await res.json();
+      if (data.success) {
+        alert("Payment successful!");
+        await viewAllSessions(token);
+      } else {
+        alert(data.message || "Payment failed");
+      }
+    } finally {
+      btn.disabled = false;
+    }
+
     if (data.success) {
       alert(`Payment successful! `);
-
+      await viewAllSessions(token);
     } else {
       alert(data.message || "Payment failed");
     }

@@ -294,7 +294,8 @@ async function getInstructorSessions(userId) {
 // Get a session by ID
 async function getSessionById(client, sessionId) {
     const { rows } = await client.query(
-        `SELECT s.session_id, s.student_id, s.instructor_id, s.status
+        `SELECT s.session_id, s.student_id, s.instructor_id, s.status,
+                start_time::text AS start_time, s.duration_minutes, s.description
          FROM sessions s
          WHERE s.session_id = $1`,
         [sessionId]
@@ -326,15 +327,28 @@ async function updatePaymentStatus(client, transactionId, newStatus) {
 
 
 // Get a free Zoom account (mock for now)
-async function getFreeZoomAccount(client) {
-    const { rows } = await client.query(
-        `SELECT id, name, account_id FROM zoom_accounts ORDER BY random() LIMIT 1`
+async function getOverlappingMeetings(zoomAccountId, startTime, durationMinutes) {
+    const { rows } = await pool.query(
+        `
+        SELECT m.meeting_id, s.session_id, s.start_time, s.duration_minutes
+        FROM meetings m
+        JOIN sessions s
+          ON s.session_id = m.session_id
+        WHERE m.zoom_account_id = $1
+          AND NOT (
+              $2::timestamp + ($3 || ' minutes')::interval <= s.start_time
+              OR
+              $2 >= s.start_time + (s.duration_minutes || ' minutes')::interval
+          )
+        `,
+        [zoomAccountId, startTime, durationMinutes]
     );
-    return rows[0] || null;
+    return rows; // if empty, no overlaps
 }
 
+
 // Insert a meeting
-async function insertMeeting(client, { session_id, zoom_account_id, link }) {
+async function insertMeeting(client, { zoom_account_id, link }, session_id) {
     const { rows } = await client.query(
         `INSERT INTO meetings (session_id, zoom_account_id, link)
          VALUES ($1, $2, $3)
@@ -378,7 +392,7 @@ export {
     getSessionById,
     getPendingPaymentBySession,
     updatePaymentStatus,
-    getFreeZoomAccount,
     insertMeeting,
-    updateSessionStatus
+    updateSessionStatus,
+    getOverlappingMeetings
 };

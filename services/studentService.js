@@ -8,9 +8,9 @@ import {
     updateSessionStatus,
     getPendingPaymentBySession,
     updatePaymentStatus,
-    insertMeeting,
-    getFreeZoomAccount
+    insertMeeting
 } from "../databases/userDatabase.js"; // make sure these DB funcs exist
+import * as zoomService from "./zoomService.js";
 import { DateTime } from "luxon";
 import pool from "../db.js";
 
@@ -36,8 +36,6 @@ export async function getStudentSessionsService(studentId, userTimeZone) {
 
     const convertedSessions = sessions.map(s => {
         // Robust UTC parsing
-
-
         let dtUtc;
         if (typeof s.start_time === "string") {
             // Normalize string to ISO-8601
@@ -61,7 +59,7 @@ export async function getStudentSessionsService(studentId, userTimeZone) {
 
         // Local time for display
         const localTime = dtUtc.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
-        console.log(localTime)
+        console.log("LOCAL TIME IN SERVICE LAYER WHEN RENDERING SESSIONS: ", localTime)
         // Initialize meeting info
         let meetingLink = s.meeting_link || null;
         let meetingScheduled = !!meetingLink;
@@ -95,12 +93,6 @@ export async function getStudentSessionsService(studentId, userTimeZone) {
     return convertedSessions;
 }
 
-
-
-
-
-/* existing functions here... */
-
 // ============================
 // PAY NOW TRANSACTION
 // ============================
@@ -112,6 +104,12 @@ export async function payNowForSession(studentId, sessionId) {
 
         // 1. Fetch session first
         const session = await getSessionById(client, sessionId);
+        const startTimeUTC = DateTime.fromSQL(session.start_time, { zone: 'utc' }).toISO();
+        // Result: "2025-12-13T14:15:00.000Z"
+
+        console.log("SESSION ID USED TO FETCH SESSION :  ", sessionId)
+        console.log("SESSION SCHEDULED FOR in service layer:  ", session.start_time)
+
         if (!session) throw new Error("Session not found");
 
         // 2. Check authorization
@@ -124,18 +122,15 @@ export async function payNowForSession(studentId, sessionId) {
         if (!payment) throw new Error("No pending payment found");
 
         // 4. Pick free Zoom account
-        const zoomAccount = await getFreeZoomAccount(client);
-        if (!zoomAccount) throw new Error("No free Zoom account available");
+        const meeting = await zoomService.createMeeting(session, startTimeUTC);
+
+        if (!meeting.link) throw new Error("Failed to create Zoom meeting");
+
+        // Insert meeting inside the same transaction
+        const insertedMeeting = await insertMeeting(client, meeting, sessionId);
 
         // 5. Update payment status
         await updatePaymentStatus(client, payment.transaction_id, "success");
-
-        // 6. Insert meeting
-        const meeting = await insertMeeting(client, {
-            session_id: sessionId,
-            zoom_account_id: zoomAccount.id,
-            link: `https://zoom.mock/${Date.now()}_${sessionId}`
-        });
 
         // 7. Update session status
         await updateSessionStatus(client, sessionId, "scheduled");
