@@ -100,12 +100,13 @@ CREATE TABLE meetings (
     link TEXT NOT NULL,
     zoom_account_id INT NOT NULL REFERENCES zoom_accounts(id) ON DELETE CASCADE,
     session_id INT REFERENCES sessions(session_id) ON DELETE CASCADE
-    );
+);
 
 	CREATE TABLE payments (
     transaction_id VARCHAR(50) PRIMARY KEY,  -- your unique transaction ID
     session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
     amount NUMERIC(10, 2) NOT NULL,         -- allows decimal values like 199.99
-    status VARCHAR(10) NOT NULL CHECK (status IN ('Success', 'Failed', 'Pending')),
+    status VARCHAR(10) NOT NULL CHECK (status IN ('success', 'failed', 'pending')),
+    student_id INT REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
     created_at TIMESTAMP DEFAULT NOW()      -- optional: track when payment was created
-    );
+);

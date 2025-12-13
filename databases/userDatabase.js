@@ -264,15 +264,27 @@ async function getStudentSessions(userId) {
 
 async function getInstructorSessions(userId) {
     const { rows } = await pool.query(
-        `SELECT s.session_id, s.description, s.student_id, s.instructor_id, s.start_time, s.duration_minutes, s.status,
-                p.status AS payment_status
+        `SELECT 
+            s.session_id,
+            s.description,
+            s.student_id,
+            s.instructor_id,
+            s.start_time::text AS start_time,
+            s.duration_minutes,
+            s.status,
+            p.status AS payment_status,
+            m.link AS meeting_link
          FROM sessions s
-         LEFT JOIN payments p ON s.session_id = p.session_id
+         LEFT JOIN payments p
+           ON p.session_id = s.session_id
+         LEFT JOIN meetings m
+           ON m.session_id = s.session_id
          WHERE s.instructor_id = $1`,
         [userId]
     );
     return rows;
 }
+
 
 
 // ============================

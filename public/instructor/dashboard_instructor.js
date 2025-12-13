@@ -4,47 +4,55 @@ async function viewAllSessions(token) {
     const res = await fetch("/instructor/all_sessions", {
       headers: { "Authorization": "Bearer " + token }
     });
+    if (!res.ok) throw new Error("Failed to fetch all sessions");
 
-    if (!res.ok) {
-      console.error("Failed to fetch all sessions");
-      return;
-    }
-
-    const data = await res.json();
-    const ul = document.getElementById("allSessions");
-    ul.innerHTML = "";
-
-    if (!data.sessions || data.sessions.length === 0) {
-      ul.innerHTML = "<li>No sessions found.</li>";
-      return;
-    }
-
-    data.sessions.forEach(s => {
-      const li = document.createElement("li");
-
-      const utcDate = new Date(s.start_time);
-      const utcStr = utcDate.toUTCString();
-      const localStr = utcDate.toLocaleString(undefined, {
-        weekday: "short", month: "short", day: "numeric",
-        year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false
-      });
-
-      li.textContent =
-        `${s.description}
-UTC: ${utcStr}
-Local: ${localStr}
-Student: ${s.student_id || s.student_user_id} 
-Duration: ${s.duration_minutes} mins
-Status: ${s.status || "Pending"}
-Payment Status: ${s.payment_status || "N/A"}`;
-
-      ul.appendChild(li);
-    });
+    const { sessions } = await res.json();
+    renderSessions(sessions || []);
 
   } catch (err) {
-    console.error("Error fetching instructor sessions:", err);
+    console.error("Error fetching sessions:", err);
   }
 }
+// Render sessions
+function renderSessions(sessions) {
+  const allUl = document.getElementById("allSessions");
+  allUl.innerHTML = "";
+
+  if (!sessions.length) {
+    allUl.innerHTML = "<li>No sessions found.</li>";
+    return;
+  }
+
+  sessions.forEach(s => {
+    const li = document.createElement("li");
+
+    // Payment status
+    let paymentText = "unpaid";
+    if (!s.payment_status) {
+      paymentText = "unpaid";
+    } else if (s.payment_status.toLowerCase() === "success") {
+      paymentText = "paid";
+    } else {
+      paymentText = s.payment_status.toLowerCase();
+    }
+
+    // Base text
+    li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
+    li.textContent += ` | Scheduled at: ${s.local_start_time}`;
+
+    // Handle meeting link visibility
+    if (s.meeting_scheduled && s.meeting_link) {
+      // Link exists and scheduled: show immediately
+      li.textContent += ` | Zoom Link: ${s.meeting_link}`;
+    } else if (s.meeting_scheduled && !s.meeting_link) {
+      // Scheduled but link hidden (more than 10 min away)
+      li.textContent += ` | Meeting scheduled. Link will be shared 10 minutes before session.`;
+    }
+
+    allUl.appendChild(li);
+  });
+}
+
 
 // Pending approvals feature
 async function loadPendingApprovals(token) {
@@ -67,7 +75,7 @@ async function loadPendingApprovals(token) {
       li.innerHTML = `
         <b>Student:</b> ${s.student_id || s.student_user_id} |
         <b>${s.description}</b> |
-        <b>${new Date(s.start_time).toLocaleString()}</b>
+        <b>${(s.local_start_time).toLocaleString()}</b>
         <br>
         Amount: <input type="number" id="amount_${s.session_id}" placeholder="Enter amount" min="1">
         <button onclick="handleApproval(${s.session_id}, 'accept')">Accept</button>
