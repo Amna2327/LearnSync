@@ -90,12 +90,12 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
                 // Session completely finished
                 meetingLink = null;
                 meetingScheduled = false;
-            } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 10) {
-                // Session in future (>10 min away), hide link
+            } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 2) {
+                // Session in future (>2 min away), hide link
                 meetingLink = null;
                 meetingScheduled = true;
             } else {
-                // Session within 10 min or ongoing: show link
+                // Session within 2 min or ongoing: show link
                 meetingScheduled = true;
             }
         }

@@ -121,8 +121,8 @@ function renderSessions(sessions) {
       li.appendChild(link);
     }
     else if (s.meeting_scheduled && !s.meeting_link) {
-      // Scheduled but link hidden (more than 10 min away)
-      li.textContent += ` | Meeting scheduled. Link will be shared 10 minutes before session.`;
+      // Scheduled but link hidden (more than 2 min away)
+      li.textContent += ` | Meeting scheduled. Link will be shared 2 minutes before session.`;
     }
 
     allUl.appendChild(li);
