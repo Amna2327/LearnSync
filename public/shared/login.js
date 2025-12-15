@@ -8,10 +8,11 @@ form.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  try {
-    const res = await fetch('/auth/login', {
+  try{
+      const res = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // 🍪 SEND / RECEIVE COOKIE
       body: JSON.stringify({ email, password })
     });
 
@@ -21,11 +22,6 @@ form.addEventListener('submit', async (e) => {
       message.textContent = data.error || "Login failed";
       return;
     }
-
-    // Save JWT + role + status
-    localStorage.setItem('jwt', data.token);
-    localStorage.setItem('role', data.role);
-    localStorage.setItem('status', data.status);
 
     console.log("[Frontend DEBUG] Logged-in user role:", data.role);
 

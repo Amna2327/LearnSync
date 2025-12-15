@@ -36,7 +36,7 @@ export async function getStudentSessionsService(studentId, userTimeZone) {
 
         console.log("[DEBUG] Luxon DateTime valid?:", dt.isValid, dt.toString());
 
-        const localTime = dt.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
+        const localTime = dt.setZone(userTimeZone).toFormat("yyyy-LL-dd HH:mm");
 
         console.log(`[DEBUG] Session ${s.session_id}: UTC=${s.start_time}, Local(${userTimeZone})=${localTime}`);
 

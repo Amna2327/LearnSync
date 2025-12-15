@@ -3,17 +3,25 @@ dotenv.config();
 
 import express from "express";
 import path from "path";
+import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
+
+const app = express();
+
+app.use(express.json());
+app.use(cookieParser()); 
 
 import authRoutes from "./routes/authRoute.js";
 import { verifyToken } from "./middlewares/jwtMiddleware.js";
-import { getUserInfoFromId, getStudentDetails } from "./databases/userDatabase.js";
+import { requireRole } from "./middlewares/roleMiddleware.js";
+
 import adminRoutes from "./routes/adminRoute.js";//for admins
 import instructorRoutes from "./routes/instructorRoute.js";//for instructors
 import studentRoutes from "./routes/studentRoute.js";
 import sessionRoutes from "./routes/sessionRoute.js";
 
-const app = express();
+import { getUserInfoFromId, getStudentDetails } from "./databases/userDatabase.js";
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -25,12 +33,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // routes
-
 app.use("/auth", authRoutes);
-app.use("/admin", adminRoutes);//for admins
-app.use("/instructor", instructorRoutes);//instructors
-app.use("/student", studentRoutes);
+app.use("/admin", verifyToken, requireRole("admin"), adminRoutes);//for admins
+app.use("/instructor", verifyToken, requireRole("instructor"), instructorRoutes);//instructors
+app.use("/student", verifyToken, requireRole("student"), studentRoutes);
 app.use("/session", sessionRoutes);
+ 
 // JWT token verified before controller is called.
 app.get("/dashboard", verifyToken, async (req, res) => {
   try {

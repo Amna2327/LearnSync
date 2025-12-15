@@ -81,7 +81,6 @@ CREATE TABLE  IF NOT EXISTS student_details (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-
 CREATE TABLE sessions (
     session_id SERIAL PRIMARY KEY,
     student_id INT NOT NULL,
@@ -89,7 +88,18 @@ CREATE TABLE sessions (
     description TEXT NOT NULL,
     start_time TIMESTAMP NOT NULL,
     duration_minutes INT NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' -- pending, accepted, rejected, completed
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' -- pending, awaiting-payment, accepted, rejected, completed
+Session
+ -- pending (instructor accepts, sends ammount) -> awaiting-payment (student pays) -> accepted (link) -> (session occurs) completed
+ -- pending (instructor accepts, sends ammount) -> awaiting-payment (student cancels) -> rejected
+ -- pending (instructor rejects) -> rejected
+
+PAYMENT:
+  -- pending (instructor accepts and sends ammount to be paid) -> (student accepts and pays) success  
+  -- pending (instructor accepts and sends ammount to be paid) -> (student cancels) failure  
+ --  instructor CANT back out and has no right to reject after student pays [payment and session status -> accepted] 
+
+    -- realistically, instructor can reject after payment, Refund policy
 
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE CASCADE
@@ -100,6 +110,8 @@ CREATE TABLE meetings (
     link TEXT NOT NULL,
     zoom_account_id INT NOT NULL REFERENCES zoom_accounts(id) ON DELETE CASCADE,
     session_id INT REFERENCES sessions(session_id) ON DELETE CASCADE,
+
+    -- these come from sessionID
     start_time TIMESTAMP NOT NULL,
     duration_minutes INT NOT NULL
 );

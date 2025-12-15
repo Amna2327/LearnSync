@@ -6,9 +6,9 @@ async function filterInstructors() {
     const response = await fetch("/instructor/filter", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("jwt")
+            "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({ subject_tags, time_zone })
     });
 
@@ -64,9 +64,9 @@ async function submitSession() {
     const response = await fetch("/session/create", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("jwt")
+            "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({ desc, instructor_id, start_time, duration_minutes })
     });
 

@@ -1,18 +1,20 @@
 import jwt from "jsonwebtoken";
 
 export function verifyToken(req, res, next) {
-    const token = req.headers.authorization?.split(" ")[1];
+
+    // CHANGE: read token from HTTP-only cookie
+    const token = req.cookies?.token; // name must match cookie name
 
     if (!token)
-        return res.status(401).json({ error: "No token provided" });
+        return res.status(401).json({ error: "Not authenticated (no token)" });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        console.log("[DEBUG] Signed-in user info:", decoded); // 🔴 check if time_zone exists
-        
-        // Debug: which role?
-        console.log("[DEBUG] Signed-in user role:", decoded.role);
+
+        req.user = decoded; // attach user payload
+
+        console.log("[DEBUG] Token verified from cookie");
+        console.log("[DEBUG] User:", decoded);
 
         next();
     } catch (err) {

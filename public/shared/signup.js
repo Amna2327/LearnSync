@@ -9,12 +9,11 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch("/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, email, password, role, timeZone })
-    });
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // 🍪 AUTO-LOGIN COOKIE
+    body: JSON.stringify({ name, email, password, role, timeZone })
+  });
 
     const data = await res.json();
 

@@ -1,30 +1,36 @@
 // dashboard_admin.js
 async function loadDashboard() {
-    const token = localStorage.getItem('jwt');
-    if (!token) {
-        window.location.href = '/login.html';
-        return;
-    }
 
     try {
         const res = await fetch('/dashboard', {
-            headers: { 'Authorization': 'Bearer ' + token }
+            headers: {},
+            credentials: "include" 
         });
         const data = await res.json();
-
         if (!res.ok) {
             alert(data.error || "Access denied");
-            window.location.href = '/login.html';
+            if (err.error === "Invalid or expired token")
+                window.location.href = "/shared/login.html";
             return;
         }
-
+        
         const user = data.user;
+
+        // HARD ROLE CHECK — REQUIRED
+        if (user.role !== "admin") {
+        console.warn("❌ Non-admin detected on admin dashboard:", user.role);
+        alert("Session changed. Please log in as an admin.");
+        window.location.href = "/shared/login.html";
+        return; // STOP EVERYTHING AND DISPLAY WARNING MESSAGE (FOR XSS)
+        }
+
         document.getElementById('userInfo').textContent =
             `Welcome, ${user.name} | Role: ${user.role}`;
 
         // Fetch pending instructors
         const pendingRes = await fetch('/admin/pending-instructors', {
-            headers: { 'Authorization': 'Bearer ' + token }
+            headers: {},
+            credentials: "include" 
         });
         const pending = await pendingRes.json();
 
@@ -48,7 +54,8 @@ async function loadDashboard() {
                 const id = btn.dataset.id;
                 const res = await fetch(`/admin/approve-instructor/${id}`, {
                     method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: {},
+                    credentials: "include" 
                 });
                 const result = await res.json();
                 alert(result.message);
@@ -61,7 +68,8 @@ async function loadDashboard() {
                 const id = btn.dataset.id;
                 const res = await fetch(`/admin/reject-instructor/${id}`, {
                     method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: {},
+                    credentials: "include" 
                 });
                 const result = await res.json();
                 alert(result.message);
@@ -73,7 +81,8 @@ async function loadDashboard() {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
                 const res = await fetch(`/admin/instructor-details/${id}`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: {},
+                    credentials: "include" 
                 });
                 const details = await res.json();
                 if (!res.ok) {
