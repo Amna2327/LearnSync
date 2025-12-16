@@ -1,6 +1,59 @@
+// checks if response from server is valid or not
+async function checkToken() {
+  try {
+    const res = await fetch("/dashboard", {
+      headers: {},
+      credentials: "include"
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok && data.error === "Invalid or expired token") {
+      alert("Session expired. Please log in again.");
+      window.location.href = "/shared/login.html";
+      return null; // token invalid → return null
+    }
+
+    // token valid → return user object
+    return data.user; 
+  } catch (err) {
+    console.error("Token check failed:", err);
+    alert("Server error. Please log in again.");
+    window.location.href = "/shared/login.html";
+    return null;
+  }
+}
+
+// logout function
+async function logout() {
+  try {
+    const res = await fetch("/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      alert("Failed to log out. Try again.");
+      return;
+    }
+
+    // Redirect to login page
+    window.location.href = "/shared/login.html";
+
+  } catch (err) {
+    console.error("Logout failed:", err);
+    alert("Server error. Could not log out.");
+  }
+}
+
+// Attach event listener to logout button
+document.getElementById("logout-btn").addEventListener("click", logout);
+
 // View all sessions feature
 async function viewAllSessions() { 
-  console.log("viewAllSessions called with cookie"); // 🔴 Called when fetching all sessions
+  const user = await checkToken();
+  if (!user) return;
 
   try {
     const res = await fetch("/instructor/all_sessions", {
@@ -14,8 +67,6 @@ async function viewAllSessions() {
     }
 
     const data = await res.json(); // expect { sessions: [...] }
-    console.log("All sessions fetched:", data.sessions); // 🔴 Sessions data received
-
     const ul = document.getElementById("allSessions");
     ul.innerHTML = ""; // 🔴 Clear previous list
 
@@ -50,22 +101,10 @@ async function viewAllSessions() {
 
 // Load instructor dashboard
 async function loadInstructorDashboard() {
-
   try {
-    const res = await fetch('/dashboard', {
-      headers: {},
-      credentials: "include" 
-    });
-    console.log("Fetching dashboard info"); // 🔴 Fetch request sent
 
-    if (!res.ok) {
-      console.error("Failed to fetch dashboard info"); // 🔴 Server returned error
-      return;
-    }
- 
-    const data = await res.json();
-    const user = data.user;
-    console.log("User info received:", user); // 🔴 Dashboard data received
+    const user = await checkToken();
+    if (!user) return;
 
     // HARD ROLE CHECK — REQUIRED
     if (user.role !== "instructor") {
@@ -102,6 +141,9 @@ function setupUploadForm() {
     e.preventDefault();
     console.log("Upload form submitted"); // 🔴 Form submit triggered
 
+    const user = await checkToken();
+    if (!user) return;
+
     const formData = new FormData(form);
 
     try {
@@ -111,8 +153,6 @@ function setupUploadForm() {
         credentials: "include",
         body: formData
       });
-
-      console.log("Uploading profile data"); // 🔴 Upload request sent
 
       const data = await res.json();
 

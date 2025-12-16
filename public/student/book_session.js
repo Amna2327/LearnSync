@@ -1,5 +1,60 @@
+// checks if response from server is valid or not
+async function checkToken() {
+  try {
+    const res = await fetch("/dashboard", {
+      headers: {},
+      credentials: "include"
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok && data.error === "Invalid or expired token") {
+      alert("Session expired. Please log in again.");
+      window.location.href = "/shared/login.html";
+      return null; // token invalid → return null
+    }
+
+    // token valid → return user object
+    return data.user; 
+  } catch (err) {
+    console.error("Token check failed:", err);
+    alert("Server error. Please log in again.");
+    window.location.href = "/shared/login.html";
+    return null;
+  }
+}
+
+// logout function
+async function logout() {
+  try {
+    const res = await fetch("/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      alert("Failed to log out. Try again.");
+      return;
+    }
+
+    // Redirect to login page
+    window.location.href = "/shared/login.html";
+
+  } catch (err) {
+    console.error("Logout failed:", err);
+    alert("Server error. Could not log out.");
+  }
+}
+
+// Attach event listener to logout button
+document.getElementById("logout-btn").addEventListener("click", logout);
+
 // -------------------- FILTER INSTRUCTORS --------------------
 async function filterInstructors() {
+    const user = await checkToken();
+    if (!user) return;
+    
     const subject_tags = document.getElementById("subject_tags").value;
     const time_zone = document.getElementById("time_zone").value; // now reading from select
 
@@ -50,6 +105,9 @@ function selectInstructor(id) {
 
 // -------------------- SUBMIT SESSION REQUEST --------------------
 async function submitSession() {
+    const user = await checkToken();
+    if (!user) return;
+    
     const desc = document.getElementById("session_desc").value;
     const instructor_id = document.getElementById("selected_instructor").value;
     const start_time = document.getElementById("start_time").value; // 🟥

@@ -1,20 +1,64 @@
 // dashboard_admin.js
+
+// checks if response from server is valid or not
+async function checkToken() {
+  try {
+    const res = await fetch("/dashboard", {
+      headers: {},
+      credentials: "include"
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok && data.error === "Invalid or expired token") {
+      alert("Session expired. Please log in again.");
+      window.location.href = "/shared/login.html";
+      return null; // token invalid → return null
+    }
+
+    // token valid → return user object
+    return data.user; 
+  } catch (err) {
+    console.error("Token check failed:", err);
+    alert("Server error. Please log in again.");
+    window.location.href = "/shared/login.html";
+    return null;
+  }
+}
+
+// logout function
+async function logout() {
+  try {
+    const res = await fetch("/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      alert("Failed to log out. Try again.");
+      return;
+    }
+
+    // Redirect to login page
+    window.location.href = "/shared/login.html";
+
+  } catch (err) {
+    console.error("Logout failed:", err);
+    alert("Server error. Could not log out.");
+  }
+}
+
+// Attach event listener to logout button
+document.getElementById("logout-btn").addEventListener("click", logout);
+
 async function loadDashboard() {
 
     try {
-        const res = await fetch('/dashboard', {
-            headers: {},
-            credentials: "include" 
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            alert(data.error || "Access denied");
-            if (err.error === "Invalid or expired token")
-                window.location.href = "/shared/login.html";
-            return;
-        }
+        const user = await checkToken();
+        if (!user) return;
         
-        const user = data.user;
+        // const user = response.user;
 
         // HARD ROLE CHECK — REQUIRED
         if (user.role !== "admin") {
@@ -79,6 +123,9 @@ async function loadDashboard() {
 
         pendingUl.querySelectorAll('.viewDocsBtn').forEach(btn => {
             btn.addEventListener('click', async () => {
+                const user = await checkToken();
+                if (!user) return;
+
                 const id = btn.dataset.id;
                 const res = await fetch(`/admin/instructor-details/${id}`, {
                     headers: {},

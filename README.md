@@ -2,26 +2,15 @@ Setup Installation Codes :
 
 - node install 
 
-**Updates**
+# Updates
 
-- Added roleMiddleware to keep track of roles
-- Added cookies with role checks to protect against Cross Site Scripting
-- Fixed Frontend for local time display 
+- Impemented roleMiddleware along with HTTP-Only Cookies
+- Ensured Frontend displays error message if session cookie expires
+- Added logout button for all roles
 
-**Additions:**
+**Authentication Flow:**
 
-- added nodemon for quick restart (runs server automatically for each update in the code, no manual restart required after every change)
-
-        Manual Runs: npm start
-        Nodemon: npm run dev 
-
-- [STUDENT] create session page with instructor filtering (session request sent to a specific instructor, no broadcast features implemented)
-- creation of sessions by students with status 'pending'
-
-- [DATABASE] added foreign keys student_id and instructor_id in session table
-
-- [STUDENT, INSTRUCTOR] display all sessions with local time zone conversion in respective dashboards
-- Added timezones.json for modularity
+Client → HTTP-only Cookie → cookie-parser → verifyToken → verify Role → redirect to controller function (Browser stores JWT in httpOnly cookie) → fetch(..., credentials: "include") → cookie-parser → req  → cookies.token → verifyToken → req.user → verifyRole(user.role)
 
 # MUST ADD:
 - Instructor Session Decision: Instructor should be able to Accept or Reject session
@@ -35,23 +24,3 @@ Setup Installation Codes :
 - View Instructor Page (profile, ratings, availability)
 - Broadcast Info Page (schedule, join links, notifications)
 - Reporting and Flagging for instructors/students
-
-**Authentication Flow:**
-
-Client → HTTP-only Cookie → cookie-parser → verifyToken -> veify Role -> redirect to controller function (Browser stores JWT in httpOnly cookie)
-
-↓
-
-fetch(..., credentials: "include")
-
-↓
-
-cookie-parser → req.cookies.token
-
-↓
-
-verifyToken → req.user
-
-↓
-
-verifyRole(student)
