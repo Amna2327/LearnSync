@@ -82,7 +82,7 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
         // Initialize meeting info
         let meetingLink = s.meeting_link || null;
         let meetingScheduled = !!meetingLink;
-
+        let meetingCompleted = false;
         if (meetingLink) {
             const endDtUtc = dtUtc.plus({ minutes: Number(s.duration_minutes) }); // Session end in UTC
 
@@ -90,6 +90,7 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
                 // Session completely finished
                 meetingLink = null;
                 meetingScheduled = false;
+                meetingCompleted = true;
             } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 2) {
                 // Session in future (>2 min away), hide link
                 meetingLink = null;
@@ -103,6 +104,7 @@ export async function getInstructorSessionsService(instructorId, userTimeZone) {
         return {
             ...s,
             local_start_time: localTime,
+            meetingCompleted: meetingCompleted,
             payment_status: s.payment_status || null,
             meeting_link: meetingLink,
             meeting_scheduled: meetingScheduled

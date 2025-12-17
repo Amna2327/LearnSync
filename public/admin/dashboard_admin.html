@@ -4,17 +4,197 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
+
+    <style>
+        /* ===== Global ===== */
+        body {
+            margin: 0 auto;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212, #1c1c1c);
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+        }
+
+        /* ===== Card ===== */
+        .dashboard-card {
+            background: rgba(30, 30, 30, 0.95);
+            width: 90%;
+            max-width: 900px;
+            border-radius: 16px;
+            padding: 30px 35px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 40px auto;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.8);
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #ffffff;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        #userInfo {
+            text-align: center;
+            color: #b0b0b0;
+            margin-bottom: 28px;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        /* ===== Section ===== */
+        h3 {
+            margin-bottom: 18px;
+            color: #ffffff;
+            border-bottom: 2px solid #444;
+            padding-bottom: 8px;
+            font-weight: 500;
+        }
+
+        /* ===== List ===== */
+        #pendingInstructors {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #pendingInstructors li {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            color: #e0e0e0;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        #pendingInstructors li:hover {
+            background: #353535;
+            transform: scale(1.015);
+        }
+
+        /* ===== Buttons ===== */
+        button {
+            border: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.25s ease;
+        }
+
+        .approveBtn {
+            background: linear-gradient(135deg, #2e7d32, #43a047);
+            color: #eaffea;
+        }
+
+        .approveBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .rejectBtn {
+            background: linear-gradient(135deg, #c62828, #e53935);
+            color: #ffecec;
+        }
+
+        .rejectBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .viewDocsBtn {
+            background: linear-gradient(135deg, #6a00f4, #8c00ff);
+            color: #ffffff;
+        }
+
+        .viewDocsBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ===== Empty State ===== */
+        #pendingStatus {
+            margin-top: 18px;
+            padding: 18px;
+            background: #242424;
+            border-radius: 12px;
+            color: #bcbcbc;
+            text-align: center;
+            font-size: 0.9rem;
+            border: 1px dashed #444;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 600px) {
+            #pendingInstructors li {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        #LOGOUT {
+            display: block;
+            /* make it a block element */
+            margin: 50px auto;
+            /* top/bottom 50px, horizontally centered */
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background-color: #8c00ff;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #LOGOUT:hover {
+            background-color: #8c00ff;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>Admin Dashboard</h2>
-    <p id="userInfo"></p>
 
-    <div id="adminContent">
-        <h3>Pending Instructor Approvals</h3>
-        <ul id="pendingInstructors"></ul>
+    <div class="dashboard-card">
+        <h2>Admin Dashboard</h2>
+        <p id="userInfo"></p>
+
+        <div id="adminContent">
+            <h3>Pending Instructor Approvals</h3>
+
+            <ul id="pendingInstructors"></ul>
+
+            <p id="pendingStatus" style="display:none;"></p>
+        </div>
     </div>
 
+    <button id="LOGOUT">Logout</button>
+
+    <script>
+        document.getElementById("LOGOUT").addEventListener("click", () => {
+            localStorage.removeItem("jwt");
+            window.location.href = "/shared/login.html";
+        });
+    </script>
     <script src="dashboard_admin.js"></script>
 </body>
 

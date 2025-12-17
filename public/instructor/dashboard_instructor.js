@@ -22,6 +22,8 @@ async function viewAllSessions(token) {
 // Render sessions
 function renderSessions(sessions) {
   const allUl = document.getElementById("allSessions");
+  const scheduledSessionsUl = document.getElementById("scheduledSessions");
+  scheduledSessionsUl.innerHTML = "";
   allUl.innerHTML = "";
 
   if (!sessions.length) {
@@ -44,7 +46,7 @@ function renderSessions(sessions) {
 
     // Base text
     li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
-    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)}`;
+    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins`;
 
     // Handle meeting link visibility
     if (s.meeting_scheduled && s.meeting_link) {
@@ -60,7 +62,19 @@ function renderSessions(sessions) {
     }
 
     allUl.appendChild(li);
+    if (s.status === "scheduled" && !s.meetingCompleted) {
+      const scheduledLi = li.cloneNode(true); // clone the same li
+      scheduledSessionsUl.appendChild(scheduledLi);
+    }
   });
+  if (!scheduledSessionsUl || scheduledSessionsUl.children.length === 0) {
+    scheduledSessionsUl.textContent = "No scheduled sessions at the moment.";
+    scheduledSessionsUl.style.display = "block";
+  }
+  if (!allUl || allUl.children.length === 0) {
+    allUl.textContent = "No sessions found.";
+    allUl.style.display = "block";
+  }
 }
 
 
@@ -79,15 +93,21 @@ async function loadPendingApprovals(token) {
     const ul = document.getElementById("pendingApprovals");
     ul.innerHTML = "";
 
+    if (!pending.length) {
+      ul.innerHTML = "<li>No pending approvals at the moment.</li>";
+      return;
+    }
+
     pending.forEach(s => {
       const li = document.createElement("li");
 
       li.innerHTML = `
     <b>Student:</b> ${s.student_id || s.student_user_id} |
     <b>${s.description}</b> |
-    <b>${formatLocalTime(s.local_start_time)}</b>
+    <b>${formatLocalTime(s.local_start_time)}</b> |
+    <b>${s.duration_minutes} mins</b> 
     <br>
-    Amount: <input type="number" id="amount_${s.session_id}" min="1">
+    Amount: <input type="number" id="amount_${s.session_id}" min="1" placeholder="Enter in $" step="0.01">
     <button onclick="handleApproval(${s.session_id}, 'accept')">Accept</button>
     <button onclick="handleApproval(${s.session_id}, 'reject')">Reject</button>
     <hr>
@@ -170,7 +190,6 @@ async function loadInstructorDashboard() {
     }
 
     viewAllSessions(token);
-
   } catch (err) {
     console.error("Error loading dashboard:", err);
   }

@@ -250,6 +250,7 @@ async function getStudentSessions(userId) {
             s.duration_minutes,
             s.status,
             p.status AS payment_status,
+            p.amount AS payment_amount,
             m.link AS meeting_link
          FROM sessions s
          LEFT JOIN payments p

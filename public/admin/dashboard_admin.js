@@ -31,6 +31,18 @@ async function loadDashboard() {
         const pendingUl = document.getElementById('pendingInstructors');
         pendingUl.innerHTML = '';
 
+        /* ===================== ADDITION START ===================== */
+        const pendingStatus = document.getElementById('pendingStatus');
+        pendingStatus.style.display = "none";
+        pendingStatus.textContent = "";
+
+        if (!pending || pending.length === 0) {
+            pendingStatus.textContent = "No pending instructors at the moment.";
+            pendingStatus.style.display = "block";
+            return;
+        }
+        /* ====================== ADDITION END ====================== */
+
         pending.forEach(inst => {
             const li = document.createElement('li');
             li.innerHTML = `
@@ -52,7 +64,7 @@ async function loadDashboard() {
                 });
                 const result = await res.json();
                 alert(result.message);
-                loadDashboard(); // refresh list
+                loadDashboard();
             });
         });
 
@@ -65,7 +77,7 @@ async function loadDashboard() {
                 });
                 const result = await res.json();
                 alert(result.message);
-                loadDashboard(); // refresh list
+                loadDashboard();
             });
         });
 

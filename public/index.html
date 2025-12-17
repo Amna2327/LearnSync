@@ -4,12 +4,86 @@
 <head>
   <meta charset="UTF-8" />
   <title>LearnSync</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #121212, #1c1c1c);
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .button-container {
+      background: linear-gradient(145deg, #1c1c1c, #121212);
+      padding: 60px 80px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 450px;
+      max-width: 500px;
+      width: 85%;
+    }
+
+    #login-btn,
+    #signup-btn {
+      background: linear-gradient(135deg, #6a00f4, #8c00ff);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 18px 0;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      width: 60%;
+      max-width: 250px;
+    }
+
+    #login-btn:hover,
+    #signup-btn:hover {
+      background: linear-gradient(135deg, #8c00ff, #6a00f4);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 700px) {
+      .button-container {
+        width: 90%;
+        padding: 50px 40px;
+      }
+    }
+
+    @media (max-width: 500px) {
+
+      #login-btn,
+      #signup-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <h2>LearnSync CMS</h2>
-  <button id="login-btn">Login</button>
-  <button id="signup-btn">Signup</button>
+  <div class="button-container">
+    <h1>LearnSync</h1>
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Signup</button>
+  </div>
 
   <script src="script.js"></script>
 </body>

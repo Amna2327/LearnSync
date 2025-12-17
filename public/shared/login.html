@@ -1,23 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>LearnSync Login</title>
-</head>
-<body>
-  <h2>Login to LearnSync</h2>
-  <form id="loginForm">
-    <label>Email:</label><br>
-    <input type="email" id="email" required><br><br>
-    
-    <label>Password:</label><br>
-    <input type="password" id="password" required><br><br>
-    
-    <button type="submit">Login</button>
-  </form>
+  <style>
+    /* Global body */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #121212, #1c1c1c);
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-  <p id="message" style="color:red;"></p>
+    /* Center card container */
+    #loginForm {
+      background-color: rgba(30, 30, 30, 0.95);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 30px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    label {
+      margin-top: 15px;
+      font-weight: 500;
+      color: #cccccc;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background-color: #2f2f2f;
+      color: #e0e0e0;
+      font-size: 14px;
+      transition: border 0.3s, background 0.3s;
+    }
+
+    input:focus {
+      border: 1px solid #8c00ff;
+      outline: none;
+      background-color: #3a3a3a;
+    }
+
+    button {
+      background: linear-gradient(135deg, #6a00f4, #8c00ff);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 25px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #8c00ff, #6a00f4);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ff5252;
+      text-align: center;
+    }
+
+    @media (max-width: 500px) {
+      #loginForm {
+        padding: 25px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <form id="loginForm">
+    <h2>Login to LearnSync</h2>
+
+    <label>Email:</label>
+    <input type="email" id="email" required>
+
+    <label>Password:</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">Login</button>
+
+    <p id="message"></p>
+  </form>
 
   <script src="login.js"></script>
 </body>
+
 </html>

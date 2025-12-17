@@ -5,11 +5,97 @@
     <meta charset="UTF-8">
     <title>Create Session</title>
     <style>
-        .instructor-card {
-            border: 1px solid #ccc;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212, #1c1c1c);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 30px 50px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 40px;
+        }
+
+        h3 {
+            color: #ffffff;
+            border-bottom: 2px solid #444;
+            padding-bottom: 6px;
+            margin-top: 30px;
+            font-weight: 500;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: 500;
+            color: #cccccc;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 40%;
+            max-width: 400px;
             padding: 10px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background-color: #2f2f2f;
+            color: #e0e0e0;
+            font-size: 14px;
+            display: block;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border: 1px solid #8c00ff;
+            outline: none;
+            background-color: #3a3a3a;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6a00f4, #8c00ff);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #8c00ff, #6a00f4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .instructor-card {
+            border: 1px solid #555;
+            padding: 12px;
             margin-bottom: 15px;
-            border-radius: 6px;
+            border-radius: 10px;
+            background-color: #2a2a2a;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .instructor-card:hover {
+            background-color: #3a3a3a;
+            transform: scale(1.02);
         }
 
         .demo-material-list {
@@ -20,41 +106,64 @@
         .demo-material-list li {
             margin-bottom: 5px;
         }
+
+        #filter-results {
+            margin-top: 15px;
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 800px) {
+
+            input,
+            textarea,
+            select {
+                width: 70%;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            input,
+            textarea,
+            select {
+                width: 95%;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <h2>Create Session</h2>
+    <h1>Create Session</h1>
 
     <!-- SESSION BASIC INFO -->
-    <label>Session Description</label><br>
-    <textarea id="session_desc"></textarea><br><br>
+    <label>Session Description</label>
+    <textarea id="session_desc"></textarea>
 
-    <label>Start Time</label><br>
-    <input type="datetime-local" id="start_time"><br><br>
+    <label>Start Time</label>
+    <input type="datetime-local" id="start_time">
 
-    <label>Duration (minutes)</label><br>
-    <input type="number" id="duration_minutes" min="1"><br><br>
+    <label>Duration (minutes)</label>
+    <input type="number" id="duration_minutes" min="1">
 
-    <label>Selected Instructor ID</label><br>
-    <input type="text" id="selected_instructor" readonly><br><br>
+    <label>Selected Instructor ID</label>
+    <input type="text" id="selected_instructor" readonly>
 
     <h3>Filter Instructors (Leave empty for no filters)</h3>
 
-    <label>Subject Tags (comma-separated)</label><br>
-    <input type="text" id="subject_tags"><br><br>
+    <label>Subject Tags (comma-separated)</label>
+    <input type="text" id="subject_tags">
 
+    <label>Time Zone</label>
     <select id="time_zone">
         <option value="">Select Time Zone</option>
-    </select><br><br>
+    </select>
 
     <button id="filter_btn">Filter</button>
 
     <h3>Matching Instructors</h3>
     <div id="filter-results"></div>
 
-    <br><br>
     <button id="submit_btn">Send Session Request</button>
 
     <script src="book_session.js"></script>

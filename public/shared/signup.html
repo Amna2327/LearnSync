@@ -1,42 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+
+<head>
     <meta charset="UTF-8">
     <title>LearnSync Signup</title>
-    </head>
-    <body>
+    <style>
+        /* Global body */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212, #1c1c1c);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Center card */
+        #signupForm {
+            background-color: rgba(30, 30, 30, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+            width: 90%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        label {
+            margin-top: 15px;
+            font-weight: 500;
+            color: #cccccc;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background-color: #2f2f2f;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: border 0.3s, background 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            border: 1px solid #8c00ff;
+            outline: none;
+            background-color: #3a3a3a;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, #6a00f4, #8c00ff);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background: linear-gradient(135deg, #8c00ff, #6a00f4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h5 {
+            font-size: 12px;
+            color: #bbbbbb;
+            margin-top: 15px;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff5252;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            #signupForm {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <form id="signupForm">
         <h2>Create a LearnSync Account</h2>
-        <form id="signupForm">
-            <label>Name:</label><br>
-            <input type="text" id="name" required><br><br>
 
-            <label>Email:</label><br>
-            <input type="email" id="email" required><br><br>
-            
-            <label>Password:</label><br>
-            <input type="password" id="password" required><br><br>
-            
-            <label>Role:</label><br>
-            <select id="role" required>
-                <option value="student">Student</option>
-                <option value="instructor">Instructor</option>
-            <!-- some front-end visuals would be good here like 2 buttons to specify each role (select one from two) instead of simple dropdown -->
-            </select><br><br>
-            
-            <label>Time Zone:</label><br>
-            <select id="timeZone" required>
-            <!-- UTC -->
+        <label>Name:</label>
+        <input type="text" id="name" required>
+
+        <label>Email:</label>
+        <input type="email" id="email" required>
+
+        <label>Password:</label>
+        <input type="password" id="password" required>
+
+        <label>Role:</label>
+        <select id="role" required>
+            <option value="student">Student</option>
+            <option value="instructor">Instructor</option>
+        </select>
+
+        <label>Time Zone:</label>
+        <select id="timeZone" required>
             <option value="UTC">UTC</option>
+        </select>
 
-
-        </select><br><br>
         <button type="submit">Signup</button>
-        
-        </form>
-        <h5> Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 digit mwith minimum length of 8 characters. </h5>
 
-        <p id="message" style="color:red;"></p>
+        <h5>Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 digit with minimum length of 8
+            characters.</h5>
 
-        <script src="signup.js"></script>
-    </body>
+        <p id="message"></p>
+    </form>
+
+    <script src="signup.js"></script>
+</body>
+
 </html>

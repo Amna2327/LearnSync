@@ -76,6 +76,10 @@ async function viewAllSessions(token) {
 function renderSessions(sessions) {
   const allUl = document.getElementById("allSessions");
   allUl.innerHTML = "";
+  const scheduledSessionsUl = document.getElementById("scheduledSessions");
+  scheduledSessionsUl.innerHTML = "";
+  const pendingUl = document.getElementById("pendingPaymentSessions");
+  pendingUl.innerHTML = "";
 
   if (!sessions.length) {
     allUl.innerHTML = "<li>No sessions found.</li>";
@@ -97,18 +101,24 @@ function renderSessions(sessions) {
 
     // Base text
     li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
-    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)}`;
+    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins`;
 
     // Show Pay Now button if eligible
     if (
       s.status === "accepted" &&
       (!s.payment_status || ["pending", "failed"].includes(s.payment_status.toLowerCase()))
     ) {
+      pendingUl.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
+      pendingUl.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins`;
+      pendingUl.textContent += '| Payment amount: $' + s.payment_amount;
+      li.textContent += "| Payment amount: $" + s.payment_amount;
       const btn = document.createElement("button");
       btn.textContent = "Pay Now";
       btn.addEventListener("click", () => handlePayNow(s.session_id, btn));
       li.appendChild(document.createTextNode(" "));
       li.appendChild(btn);
+      pendingUl.appendChild(document.createTextNode(" "));
+      pendingUl.appendChild(btn);
     }
 
     // Handle meeting link visibility
@@ -126,7 +136,25 @@ function renderSessions(sessions) {
     }
 
     allUl.appendChild(li);
-  });
+
+    if (s.status === "scheduled" && !s.meetingCompleted) {
+      const scheduledLi = li.cloneNode(true); // clone the same li
+      scheduledSessionsUl.appendChild(scheduledLi);
+    }
+
+  })
+  if (!pendingUl || pendingUl.children.length === 0) {
+    pendingUl.textContent = "No pending payment at the moment.";
+    pendingUl.style.display = "block";
+  }
+  if (!scheduledSessionsUl || scheduledSessionsUl.children.length === 0) {
+    scheduledSessionsUl.textContent = "No scheduled sessions at the moment.";
+    scheduledSessionsUl.style.display = "block";
+  }
+  if (!allUl || allUl.children.length === 0) {
+    allUl.textContent = "No sessions found.";
+    allUl.style.display = "block";
+  };
 }
 
 // Handle Pay Now click
