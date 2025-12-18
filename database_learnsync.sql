@@ -1,4 +1,3 @@
-
 -- the tables below are for zoom meeting, they have not been implememted completely(lack users)
 -- will be completed when working upon meeting inetgration
 CREATE TABLE zoom_accounts (
@@ -89,15 +88,16 @@ CREATE TABLE sessions (
     start_time TIMESTAMP NOT NULL,
     duration_minutes INT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending' -- pending, awaiting-payment, accepted, rejected, completed
-Session
+
+-- SESSION:
  -- pending (instructor accepts, sends ammount) -> awaiting-payment (student pays) -> accepted (link) -> (session occurs) completed
  -- pending (instructor accepts, sends ammount) -> awaiting-payment (student cancels) -> rejected
  -- pending (instructor rejects) -> rejected
 
-PAYMENT:
+-- PAYMENT:
   -- pending (instructor accepts and sends ammount to be paid) -> (student accepts and pays) success  
   -- pending (instructor accepts and sends ammount to be paid) -> (student cancels) failure  
- --  instructor CANT back out and has no right to reject after student pays [payment and session status -> accepted] 
+  -- instructor CANT back out and has no right to reject after student pays [payment and session status -> accepted] 
 
     -- realistically, instructor can reject after payment, Refund policy
 
@@ -109,9 +109,14 @@ CREATE TABLE meetings (
     meeting_id SERIAL PRIMARY KEY,
     link TEXT NOT NULL,
     zoom_account_id INT NOT NULL REFERENCES zoom_accounts(id) ON DELETE CASCADE,
-    session_id INT REFERENCES sessions(session_id) ON DELETE CASCADE,
+    session_id INT REFERENCES sessions(session_id) ON DELETE CASCADE
+);
 
-    -- these come from sessionID
-    start_time TIMESTAMP NOT NULL,
-    duration_minutes INT NOT NULL
+	CREATE TABLE payments (
+    transaction_id VARCHAR(50) PRIMARY KEY,  -- your unique transaction ID
+    session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+    amount NUMERIC(10, 2) NOT NULL,         -- allows decimal values like 199.99
+    status VARCHAR(10) NOT NULL CHECK (status IN ('success', 'failed', 'pending')),
+    student_id INT REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW()      -- optional: track when payment was created
 );

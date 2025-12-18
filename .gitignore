@@ -4,3 +4,4 @@ node_modules/
 .env.development
 uploads/
 logs/
+.env

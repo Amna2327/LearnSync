@@ -51,51 +51,154 @@ async function logout() {
 document.getElementById("logout-btn").addEventListener("click", logout);
 
 // View all sessions feature
-async function viewAllSessions() { 
-  const user = await checkToken();
-  if (!user) return;
+function formatLocalTime(iso) {
+  return iso
+    .replace("T", " ")
+    .replace(/:\d{2}\+\d{2}:\d{2}$/, "");
+}
 
+async function viewAllSessions() {
   try {
+    const user = await checkToken();
+    if (!user) return;
+
     const res = await fetch("/instructor/all_sessions", {
       headers: {},
       credentials: "include"
     });
-    
-    if (!res.ok) {
-      console.error("Failed to fetch all sessions"); // 🔴 Server returned error
-      return;
-    }
+    if (!res.ok) throw new Error("Failed to fetch all sessions");
 
-    const data = await res.json(); // expect { sessions: [...] }
-    const ul = document.getElementById("allSessions");
-    ul.innerHTML = ""; // 🔴 Clear previous list
-
-    if (!data.sessions || data.sessions.length === 0) {
-      ul.innerHTML = "<li>No sessions found.</li>";
-      console.log("No sessions to display"); // 🔴 Nothing to display
-      return;
-    }
-
-    data.sessions.forEach(s => {
-      const li = document.createElement("li");
-      
-      console.log("Raw start_time from API:", s.start_time);
-      console.log("Backend Converted local time:", s.local_start_time);
-      
-      li.textContent =
-        `${s.description} | 
-        UTC: ${new Date(s.start_time).toUTCString()} | 
-        Local: ${s.local_start_time} | 
-        Duration: ${s.duration_minutes} mins | 
-        Student ID: ${s.student_id} | 
-        Status: ${s.status || "Pending"}`;
-
-      ul.appendChild(li);
-      console.log("🔴 Displayed session:", s.description); // 🔴 per-item debug
-    });
+    const { sessions } = await res.json();
+    renderSessions(sessions || []);
 
   } catch (err) {
-    console.error("🔴 Error fetching instructor sessions:", err); // 🔴
+    console.error("Error fetching sessions:", err);
+  }
+}
+// Render sessions
+function renderSessions(sessions) {
+  const allUl = document.getElementById("allSessions");
+  allUl.innerHTML = "";
+
+  if (!sessions.length) {
+    allUl.innerHTML = "<li>No sessions found.</li>";
+    return;
+  }
+
+  sessions.forEach(s => {
+    const li = document.createElement("li");
+
+    // Payment status
+    let paymentText = "unpaid";
+    if (!s.payment_status) {
+      paymentText = "unpaid";
+    } else if (s.payment_status.toLowerCase() === "success") {
+      paymentText = "paid";
+    } else {
+      paymentText = s.payment_status.toLowerCase();
+    }
+
+    // Base text
+    li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
+    if (s.status === "accepted" || s.status === "scheduled") li.textContent += ` | Amount: ${s.amount}`;
+    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)}`;
+
+    // Handle meeting link visibility
+    if (s.meeting_scheduled && s.meeting_link) {
+      const link = document.createElement("a");
+      link.href = s.meeting_link;
+      link.textContent = "Join Zoom";
+      link.target = "_blank"; // open in new tab
+      li.appendChild(document.createTextNode(" | Zoom Link: "));
+      li.appendChild(link);
+    } else if (s.meeting_scheduled && !s.meeting_link) {
+      // Scheduled but link hidden (more than 2 min away)
+      li.textContent += ` | Meeting scheduled. Link will be shared 2 minutes before session.`;
+    }
+
+    allUl.appendChild(li);
+  });
+}
+
+// Pending approvals feature
+async function loadPendingApprovals() {
+  try {
+    const user = await checkToken();
+    if (!user) return; 
+
+    const res = await fetch("/instructor/all_sessions", {
+      headers: {},
+      credentials: "include"
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const pending = data.sessions.filter(s => s.status === "pending");
+
+    const ul = document.getElementById("pendingApprovals");
+    ul.innerHTML = "";
+
+    pending.forEach(s => {
+      const li = document.createElement("li");
+
+      // Determine the amount to display
+      let amountText = "";
+      if (s.status === "accepted" || s.status === "scheduled") {
+        amountText = ` | Amount: ${s.amount || "N/A"}`;
+      }
+
+      li.innerHTML = `
+        <b>Student:</b> ${s.student_id || s.student_user_id} |
+        <b> Desc: ${s.description} | Amount:</b>${amountText} |
+        <br>
+        <b>${formatLocalTime(s.local_start_time)}</b> |
+        <b>${s.duration_minutes} mins</b> |
+        <br>
+        Amount to charge: <input type="number" id="amount_${s.session_id}" value="${s.amount || ""}" min="1">
+        <button onclick="handleApproval(${s.session_id}, 'accept')">Accept</button>
+        <button onclick="handleApproval(${s.session_id}, 'reject')">Reject</button>
+        <hr>
+      `;
+      ul.appendChild(li);
+  });
+  } catch (err) {
+    console.error("Error loading pending approvals:", err);
+  }
+}
+
+// Handle accept/reject action
+async function handleApproval(sessionId, action) {
+  let amount = null;
+
+  if (action === "accept") {
+    amount = parseFloat(document.getElementById(`amount_${sessionId}`).value);
+    if (!amount || amount <= 0) {
+      alert("Enter a valid amount");
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch("/instructor/session_action", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "include",
+      body: JSON.stringify({ session_id: sessionId, action, amount })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert(data.message);
+      loadPendingApprovals();
+      viewAllSessions();
+    } else {
+      alert(data.error || "Failed to update session");
+    }
+
+  } catch (err) {
+    console.error("Error sending approval request:", err);
   }
 }
 
@@ -118,32 +221,28 @@ async function loadInstructorDashboard() {
       `Welcome, ${user.name} | Role: ${user.role}`;
 
     if (user.status === "pending") {
-      console.log("Instructor is pending, showing upload form"); // 🔴 User pending
       document.getElementById("pendingInstructorUpload").style.display = "block";
       setupUploadForm();
     } else if (user.status === "active") {
-      console.log("Instructor is active, showing dashboard content"); // 🔴 User active
       document.getElementById("instructorContent").style.display = "block";
+      await loadPendingApprovals();
+      await viewAllSessions();
     }
 
-    console.log("Triggering viewAllSessions"); // 🔴 Now fetching sessions
-    await viewAllSessions();
-
   } catch (err) {
-    console.error("Error loading instructor dashboard:", err); // 🔴 Network or parsing error
+    console.error("Error loading dashboard:", err);
   }
 }
 
-// Setup upload form for pending instructors
+// Setup upload form
 function setupUploadForm() {
   const form = document.getElementById('uploadForm');
   form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log("Upload form submitted"); // 🔴 Form submit triggered
-
+    
     const user = await checkToken();
     if (!user) return;
 
+    e.preventDefault();
     const formData = new FormData(form);
 
     try {
@@ -155,23 +254,15 @@ function setupUploadForm() {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        console.error("Upload failed:", data.error); // 🔴 Server error on upload
-        document.getElementById('uploadMessage').textContent = data.error || "Upload failed";
-        return;
-      }
-
-      console.log("Upload successful:", data.message); // 🔴 Server responded successfully
-      document.getElementById('uploadMessage').textContent = data.message;
+      document.getElementById('uploadMessage').textContent =
+        data.message || data.error || "Upload failed";
 
     } catch (err) {
-      console.error("Error connecting to server:", err); // 🔴 Network error
-      document.getElementById('uploadMessage').textContent = "Error connecting to server";
+      document.getElementById('uploadMessage').textContent = "Server error";
     }
   });
 }
 
-// Call the dashboard loader
-console.log("Initializing instructor dashboard"); // 🔴 Script start
+// Initialize
+console.log("Initializing instructor dashboard");
 loadInstructorDashboard();

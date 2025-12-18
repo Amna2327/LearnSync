@@ -1,5 +1,7 @@
 import { getInstructorDetails, insertInstructorDetails, updateInstructorDetails, getInstructorsByTags, getInstructorSessions } from "../databases/userDatabase.js";
 import { DateTime } from "luxon";
+import { acceptSessionWithPayment_transactional, rejectSession } from "../databases/sessionDatabase.js";
+import { getPaymentAmountfromSessionID } from "../databases/sessionDatabase.js"
 
 /**
  * Save or update instructor profile including:
@@ -48,25 +50,109 @@ export async function getTaggedInstructorInfo(time_zone, subjectTags = []) {
     return getInstructorsByTags(subjectTags, time_zone);
 }
 
+// Get student sessions with timezone conversion
 export async function getInstructorSessionsService(instructorId, userTimeZone) {
     const sessions = await getInstructorSessions(instructorId);
+    const nowUtc = DateTime.utc();
 
-    const convertedSessions = sessions.map(s => {
-        console.log("[DEBUG] Raw session start_time type:", typeof s.start_time, s.start_time);
+    // ✅ Use Promise.all with async map
+    const convertedSessions = await Promise.all(
+        sessions.map(async (s) => {  // ✅ Add async here
+            // Robust UTC parsing
+            let dtUtc;
+            if (typeof s.start_time === "string") {
+                let isoString = s.start_time.replace(' ', 'T');
+                if (!isoString.endsWith('Z')) {
+                    isoString += 'Z';
+                }
+                dtUtc = DateTime.fromISO(isoString, { zone: 'utc' });
+            } else if (s.start_time instanceof Date) {
+                dtUtc = DateTime.fromJSDate(s.start_time, { zone: 'utc' });
+            } else {
+                console.error("Invalid start_time:", s.start_time);
+                return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+            }
 
-        // Convert to Luxon DateTime — use fromJSDate if it's a Date object
-        const dt = (s.start_time instanceof Date) 
-                   ? DateTime.fromJSDate(s.start_time, { zone: 'utc' })
-                   : DateTime.fromISO(s.start_time, { zone: 'utc' });
+            if (!dtUtc.isValid) {
+                console.error("Invalid Luxon DateTime:", s.start_time);
+                return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+            }
 
-        console.log("[DEBUG] Luxon DateTime valid?:", dt.isValid, dt.toString());
+            // Local time for display
+            const localTime = dtUtc.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
+            console.log("LOCAL TIME IN SERVICE LAYER WHEN RENDERING SESSIONS: ", localTime);
+            
+            // ✅ Now you can use await
+            let amount = null;
+            try {
+                const paymentResult = await getPaymentAmountfromSessionID(s.session_id); // ✅ This works now
+                console.log("Payment result raw:", paymentResult);
+                
+                if (paymentResult && paymentResult.length > 0) {
+                    const paymentRow = paymentResult[0];
+                    console.log("Payment row:", paymentRow);
+                    
+                    amount = parseFloat(paymentRow.amount);
+                    console.log("Parsed amount:", amount, "Type:", typeof amount);
+                }
+            } catch (err) {
+                console.error("Error fetching payment amount:", err);
+            }
 
-        const localTime = dt.setZone(userTimeZone).toFormat("yyyy-LL-dd HH:mm");
+            // Initialize meeting info
+            let meetingLink = s.meeting_link || null;
+            let meetingScheduled = !!meetingLink;
 
-        console.log(`[DEBUG] Session ${s.session_id}: UTC=${s.start_time}, Local(${userTimeZone})=${localTime}`);
+            if (meetingLink) {
+                const endDtUtc = dtUtc.plus({ minutes: Number(s.duration_minutes) });
+                if (nowUtc >= endDtUtc) {
+                    meetingLink = null;
+                    meetingScheduled = false;
+                } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 2) {
+                    meetingLink = null;
+                    meetingScheduled = true;
+                } else {
+                    meetingScheduled = true;
+                }
+            }
 
-        return { ...s, local_start_time: localTime };
-    });
+            return {
+                ...s,
+                amount: amount,
+                local_start_time: localTime,
+                payment_status: s.payment_status || null,
+                meeting_link: meetingLink,
+                meeting_scheduled: meetingScheduled
+            };
+        })
+    );
 
     return convertedSessions;
 }
+
+
+/**
+ * Called when instructor accepts/rejects a session.
+ * - If accept: updates session.status to 'accepted', sets amount, creates payment entry (pending).
+ * - If reject: updates session.status to 'rejected'.
+ *
+ * Returns the updated session row (object) on success, otherwise null/false.
+ */
+
+// Update session status by instructor
+export async function updateSessionStatusByInstructor(sessionId, instructorId, action, amount) {
+    if (action === "accept") {
+        // Use the transactional DB function
+        const result = await acceptSessionWithPayment_transactional(sessionId, instructorId, amount);
+        return result ? result.session : null;
+
+    } else if (action === "reject") {
+        const session = await rejectSession(sessionId, instructorId);
+        return session || null;
+
+    } else {
+        return null;
+    }
+}
+
+

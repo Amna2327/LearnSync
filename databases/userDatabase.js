@@ -124,8 +124,8 @@ async function insertInstructorDetails(
 ) {
     return pool.query(
         `INSERT INTO instructor_details
-         (instructor_id, certifications, demo_material, subject_tags, education_level_tags)
-         VALUES ($1, $2, $3, $4, $5)`,
+        (instructor_id, certifications, demo_material, subject_tags, education_level_tags)
+        VALUES ($1, $2, $3, $4, $5)`,
         [instructorId, certifications, demoMaterials, subjectTags, educationLevels]
     );
 }
@@ -145,24 +145,24 @@ async function updateInstructorDetails(
              education_level_tags = $4,
              updated_at = now()
          WHERE instructor_id = $5`,
-        [certifications, demoMaterials, subjectTags, educationLevels, instructorId]
-    );
-}
-
-
-// Fetch student details
-async function getStudentDetails(studentId) {
-    const { rows } = await pool.query(
+         [certifications, demoMaterials, subjectTags, educationLevels, instructorId]
+        );
+    }
+    
+    
+    // Fetch student details
+    async function getStudentDetails(studentId) {
+        const { rows } = await pool.query(
         "SELECT * FROM student_details WHERE student_id = $1",
         [studentId]
     );
-
+    
     const data = rows[0] || null;
-
+    
     if (data && typeof data.subject_tags === "string") {
         data.subject_tags = JSON.parse(data.subject_tags);
     }
-
+    
     return data;
 }
 
@@ -179,10 +179,10 @@ async function insertStudentDetails(studentId, educationLevel = null, subjectTag
 async function updateStudentDetails(studentId, educationLevel, subjectTags) {
     return pool.query(
         `UPDATE student_details
-         SET education_level = $1,
-             subject_tags = $2,
-             updated_at = now()
-         WHERE student_id = $3`,
+        SET education_level = $1,
+        subject_tags = $2,
+        updated_at = now()
+        WHERE student_id = $3`,
         [educationLevel, subjectTags, studentId]
     );
 }
@@ -191,73 +191,183 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
     const noSubjects = !subjectTags || subjectTags.length === 0;
 
     console.log("DB - getInstructorsByTags called with:", { time_zone, subjectTags });
-
+    
     // Case 1: No filters
     if (noTimezone && noSubjects) {
         return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
-             FROM users u
-             JOIN instructor_details in_d ON u.id = in_d.instructor_id
-             WHERE u.role = 'instructor' AND u.status = 'active'
-             LIMIT 15`
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
+            FROM users u
+            JOIN instructor_details in_d ON u.id = in_d.instructor_id
+            WHERE u.role = 'instructor' AND u.status = 'active'
+            LIMIT 15`
         );
     }
-
+    
     // Case 2: Only timezone
     if (!noTimezone && noSubjects) {
         return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
              FROM users u
              JOIN instructor_details in_d ON u.id = in_d.instructor_id
              WHERE u.role = 'instructor' AND u.status = 'active'
              AND u.time_zone = $1`,
-            [time_zone]
-        );
-    }
-
-    // Case 3: Only subject tags
-    if (noTimezone && !noSubjects) {
-        return pool.query(
-            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
-             FROM users u
-             JOIN instructor_details in_d ON u.id = in_d.instructor_id
-             WHERE u.role = 'instructor' AND u.status = 'active'
-             AND in_d.subject_tags && $1::text[]`,
+             [time_zone]
+            );
+        }
+        
+        // Case 3: Only subject tags
+        if (noTimezone && !noSubjects) {
+            return pool.query(
+            `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
+            FROM users u
+            JOIN instructor_details in_d ON u.id = in_d.instructor_id
+            WHERE u.role = 'instructor' AND u.status = 'active'
+            AND in_d.subject_tags && $1::text[]`,
             [subjectTags]
         );
     }
-
+    
     // Case 4: Both filters
     return pool.query(
-        `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags
-         FROM users u
+        `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
+        FROM users u
          JOIN instructor_details in_d ON u.id = in_d.instructor_id
          WHERE u.role = 'instructor' AND u.status = 'active'
          AND u.time_zone = $1
          AND in_d.subject_tags && $2::text[]`,
-        [time_zone, subjectTags]
-    );
-}
-
+         [time_zone, subjectTags]
+        );
+    }
+    
 async function getStudentSessions(userId) {
-
     const { rows } = await pool.query(
-        `SELECT s.session_id, s.description, s.student_id, s.instructor_id, s.start_time, s.duration_minutes, s.status
+        `SELECT 
+        s.session_id,
+            s.description,
+            s.student_id,
+            s.instructor_id,
+            s.start_time::text AS start_time, -- get as string
+            s.duration_minutes,
+            s.status,
+            p.status AS payment_status,
+            m.link AS meeting_link
+            FROM sessions s
+            LEFT JOIN payments p
+            ON p.session_id = s.session_id
+            LEFT JOIN meetings m
+            ON m.session_id = s.session_id
+            WHERE s.student_id = $1`,
+            [userId]
+        );
+        return rows;
+    }
+    
+    async function getInstructorSessions(userId) {
+        const { rows } = await pool.query(
+        `SELECT 
+        s.session_id,
+        s.description,
+        s.student_id,
+        s.instructor_id,
+        s.start_time::text AS start_time,
+        s.duration_minutes,
+        s.status,
+            p.status AS payment_status,
+            m.link AS meeting_link
          FROM sessions s
-         WHERE s.student_id = $1`,
-        [userId]
+         LEFT JOIN payments p
+           ON p.session_id = s.session_id
+         LEFT JOIN meetings m
+           ON m.session_id = s.session_id
+           WHERE s.instructor_id = $1`,
+           [userId]
+        );
+        return rows;
+    }
+    
+    
+    
+    // ============================
+    // PAY NOW / TRANSACTION HELPERS
+    // ============================
+    
+    // Get a session by ID
+    async function getSessionById(client, sessionId) {
+        const { rows } = await client.query(
+            `SELECT s.session_id, s.student_id, s.instructor_id, s.status,
+            start_time::text AS start_time, s.duration_minutes, s.description
+            FROM sessions s
+            WHERE s.session_id = $1`,
+        [sessionId]
     );
-    return rows;
+    return rows[0] || null;
 }
-async function getInstructorSessions(userId) {
 
-    const { rows } = await pool.query(
-        `SELECT s.session_id, s.description, s.student_id, s.instructor_id, s.start_time, s.duration_minutes, s.status
-         FROM sessions s
-         WHERE s.instructor_id = $1`,
-        [userId]
+// Get pending payment for a session
+async function getPendingPaymentBySession(client, sessionId) {
+    const { rows } = await client.query(
+        `SELECT * FROM payments
+        WHERE session_id = $1 AND status IN ('pending', 'failed')`,
+        [sessionId]
     );
-    return rows;
+    return rows[0] || null;
+}
+
+// Update payment status
+async function updatePaymentStatus(client, transactionId, newStatus) {
+    const { rows } = await client.query(
+        `UPDATE payments
+        SET status = $1
+        WHERE transaction_id = $2
+         RETURNING *`,
+         [newStatus, transactionId]
+        );
+        return rows[0] || null;
+    }
+
+    
+// Get a free Zoom account (mock for now)
+async function getOverlappingMeetings(zoomAccountId, startTime, durationMinutes) {
+    const { rows } = await pool.query(
+        `
+        SELECT m.meeting_id, s.session_id, s.start_time, s.duration_minutes
+        FROM meetings m
+        JOIN sessions s
+        ON s.session_id = m.session_id
+        WHERE m.zoom_account_id = $1
+        AND NOT (
+            $2::timestamp + ($3 || ' minutes')::interval <= s.start_time
+            OR
+            $2 >= s.start_time + (s.duration_minutes || ' minutes')::interval
+            )
+        `,
+        [zoomAccountId, startTime, durationMinutes]
+    );
+    return rows; // if empty, no overlaps
+}
+
+
+// Insert a meeting
+async function insertMeeting(client, { zoom_account_id, link }, session_id) {
+    const { rows } = await client.query(
+        `INSERT INTO meetings (session_id, zoom_account_id, link)
+        VALUES ($1, $2, $3)
+         RETURNING *`,
+        [session_id, zoom_account_id, link]
+    );
+    return rows[0] || null;
+}
+
+// Update session status
+async function updateSessionStatus(client, sessionId, newStatus) {
+    const { rows } = await client.query(
+        `UPDATE sessions
+         SET status = $1
+         WHERE session_id = $2
+         RETURNING *`,
+        [newStatus, sessionId]
+    );
+    return rows[0] || null;
 }
 
 export {
@@ -275,8 +385,14 @@ export {
     getStudentDetails,
     insertStudentDetails,
     updateStudentDetails,
-
+    
     getInstructorsByTags,
     getStudentSessions,
-    getInstructorSessions
+    getInstructorSessions,
+    getSessionById,
+    getPendingPaymentBySession,
+    updatePaymentStatus,
+    insertMeeting,
+    updateSessionStatus,
+    getOverlappingMeetings
 };

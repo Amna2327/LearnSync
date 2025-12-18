@@ -56,9 +56,13 @@ async function filterInstructors() {
     if (!user) return;
     
     const subject_tags = document.getElementById("subject_tags").value;
-    const time_zone = document.getElementById("time_zone").value; // now reading from select
+    const time_zone = document.getElementById("time_zone").value;
 
-    const response = await fetch("/instructor/filter", {
+    const subjectsArray = subject_tags
+        ? subject_tags.split(",").map(s => s.trim()).filter(Boolean)
+        : [];
+
+    const response = await fetch("/student/filter_instructor", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -78,23 +82,33 @@ async function filterInstructors() {
 
     data.instructors.forEach(instr => {
         const div = document.createElement("div");
+        div.className = "instructor-card";
 
-        // Use join(', ') for array fields
-        const subjectTags = instr.subject_tags ? instr.subject_tags.join(', ') : 'None';
-        const educationLevels = instr.education_level_tags ? instr.education_level_tags.join(', ') : 'None';
+        const subjectTags = instr.subject_tags ? instr.subject_tags.join(", ") : "None";
+        const educationLevels = instr.education_level_tags ? instr.education_level_tags.join(", ") : "None";
         const timeZone = instr.time_zone;
 
+        let demoLinksHTML = "No demo material";
+        if (instr.demo_material && instr.demo_material.length > 0) {
+            demoLinksHTML = instr.demo_material.map(url =>
+                `<a href="${url}" target="_blank" download>${url.split("/").pop()}</a>`
+            ).join(" | ");
+        }
+
         div.innerHTML = `
-            <p><b>${instr.name}</b></p>
-            <p>Email: ${instr.email}</p>
-            <p>Time Zone: ${timeZone}</p>
-            <p>Subjects: ${subjectTags}</p>
-            <p>Education Levels: ${educationLevels}</p>
-            <button onclick="selectInstructor(${instr.id})">Select</button>
-            <hr>
-        `;
+        <p><b>${instr.name}</b></p>
+        <p>Email: ${instr.email}</p>
+        <p>Time Zone: ${timeZone}</p>
+        <p>Subjects: ${subjectTags}</p>
+        <p>Education Levels: ${educationLevels}</p>
+        <p>Demo Material: ${demoLinksHTML}</p>
+        <button onclick="selectInstructor(${instr.id})">Select</button>
+        <hr>
+    `;
         resultsDiv.appendChild(div);
     });
+
+
 }
 
 // -------------------- SELECT INSTRUCTOR --------------------
@@ -110,11 +124,10 @@ async function submitSession() {
     
     const desc = document.getElementById("session_desc").value;
     const instructor_id = document.getElementById("selected_instructor").value;
-    const start_time = document.getElementById("start_time").value; // 🟥
+    const start_time = document.getElementById("start_time").value;
     const duration_minutes = parseInt(document.getElementById("duration_minutes").value);
 
-
-    if ( !desc || !instructor_id || !start_time || !duration_minutes) {
+    if (!desc || !instructor_id || !start_time || !duration_minutes) {
         alert("Fill all fields and select an instructor.");
         return;
     }
@@ -129,7 +142,6 @@ async function submitSession() {
     });
 
     const data = await response.json();
-
     if (data.success) {
         alert("Session request sent!");
     } else {
@@ -141,25 +153,23 @@ async function submitSession() {
 document.getElementById("filter_btn").onclick = filterInstructors;
 document.getElementById("submit_btn").onclick = submitSession;
 
-// -------------------- LOAD TIMEZONES FROM JSON--------------------
-document.addEventListener('DOMContentLoaded', async () => {
-    const timeZoneSelect = document.getElementById('time_zone');
-
+// -------------------- LOAD TIMEZONES --------------------
+document.addEventListener("DOMContentLoaded", async () => {
+    const timeZoneSelect = document.getElementById("time_zone");
     try {
-        const res = await fetch('../timezones.json');
+        const res = await fetch("../timezones.json");
         const timeZones = await res.json();
-
         timeZones.forEach(tz => {
-            const option = document.createElement('option');
+            const option = document.createElement("option");
             option.value = tz.value;
             option.textContent = tz.label;
             timeZoneSelect.appendChild(option);
         });
     } catch (err) {
-        console.error('Error loading time zones:', err);
-        const option = document.createElement('option');
-        option.value = 'UTC';
-        option.textContent = 'UTC';
+        console.error("Error loading time zones:", err);
+        const option = document.createElement("option");
+        option.value = "UTC";
+        option.textContent = "UTC";
         timeZoneSelect.appendChild(option);
     }
 });
