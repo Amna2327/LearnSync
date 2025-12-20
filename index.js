@@ -5,8 +5,15 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
+import { testConnection } from "./db.js";
 
 const app = express();
+
+// Test database connection on startup
+testConnection().catch(err => {
+    console.error("⚠️  Database connection test failed on startup:", err.message);
+    console.log("⚠️  The server will continue, but database operations may fail.");
+});
 
 app.use(express.json());
 app.use(cookieParser()); 
@@ -83,8 +90,23 @@ app.get("/", (req, res) => {
   console.log(`Landing page showing vision and intended use`);
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error. Please try again later.',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 Open http://localhost:${PORT} in your browser`);
 });
 
 

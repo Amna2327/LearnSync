@@ -33,8 +33,15 @@ export async function signupService(name, email, entered_password, role, timeZon
 
 	const hashed_password = await bcrypt.hash(password, 10);
 
-	const isCreated = await createUser(name, email, hashed_password, role, timeZone);
-	if (!isCreated) throw new Error("Could not add user to database");
+	try {
+		const isCreated = await createUser(name, email, hashed_password, role, timeZone);
+		if (!isCreated) {
+			throw new Error("Could not add user to database. Please try again.");
+		}
+	} catch (dbError) {
+		// Re-throw database errors with their original messages
+		throw dbError;
+	}
 	
 	const userInfo = await getUserInfoFromEmail(email);
 	
