@@ -2,18 +2,70 @@ import pool from "../db.js";
 
 async function createUser(name, email, hashedPassword, role = 'student', timeZone = 'UTC') {
     try {
+        // Validate inputs
+        if (!name || !email || !hashedPassword) {
+            console.error("createUser: Missing required parameters", { name: !!name, email: !!email, hashedPassword: !!hashedPassword });
+            throw new Error("Missing required user information");
+        }
+
+        // Validate role
+        if (role !== 'student' && role !== 'instructor') {
+            console.error("createUser: Invalid role", role);
+            throw new Error(`Invalid role: ${role}. Must be 'student' or 'instructor'`);
+        }
+
         const status = role === "instructor" ? "pending" : "active";
 
+        console.log("Attempting to create user:", { name, email, role, timeZone, status });
+
+        // Test database connection first
+        try {
+            await pool.query('SELECT 1');
+        } catch (connErr) {
+            console.error("Database connection error:", connErr);
+            throw new Error(`Database connection failed: ${connErr.message}`);
+        }
+
         const result = await pool.query(
-            "INSERT INTO users (name, email, password_hash, role, time_zone, status) VALUES ($1, $2, $3, $4, $5, $6)",
+            "INSERT INTO users (name, email, password_hash, role, time_zone, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
             [name, email, hashedPassword, role, timeZone, status]
         );
 
-        return result.rowCount === 1; // TRUE if insert succeeded
+        if (result.rowCount === 1) {
+            console.log("User created successfully with ID:", result.rows[0].id);
+            return true;
+        } else {
+            console.error("createUser: Insert returned rowCount:", result.rowCount);
+            throw new Error("User creation failed: No rows inserted");
+        }
 
     } catch (err) {
-        console.error("Error in createUser:", err);
-        return false;
+        console.error("Error in createUser - Full error details:", {
+            message: err.message,
+            code: err.code,
+            detail: err.detail,
+            constraint: err.constraint,
+            stack: err.stack
+        });
+        
+        // Re-throw with more context for better error messages
+        if (err.code === '23505') { // Unique violation
+            throw new Error("Email already exists. Please use a different email.");
+        } else if (err.code === '23502') { // Not null violation
+            throw new Error("Missing required user information.");
+        } else if (err.code === '42P01') { // Table doesn't exist
+            throw new Error("Database table not found. Please run the SQL script: database_learnsync.sql");
+        } else if (err.code === '28P01') { // Authentication failed
+            throw new Error("Database authentication failed. Please check your PostgreSQL password in the .env file. The password 'Alpha' may be incorrect.");
+        } else if (err.code === '3D000') { // Database doesn't exist
+            throw new Error("Database 'learnsync_database' not found. Please create it first: CREATE DATABASE learnsync_database;");
+        } else if (err.code === 'ECONNREFUSED') { // Connection refused
+            throw new Error("Cannot connect to PostgreSQL. Please ensure PostgreSQL is running on localhost:5432");
+        } else if (err.message) {
+            throw new Error(`Database error: ${err.message}`);
+        } else {
+            throw new Error("Could not add user to database. Please check database connection and try again.");
+        }
     }
 }
 
