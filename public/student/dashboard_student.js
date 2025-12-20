@@ -132,8 +132,7 @@ async function loadDashboard() {
     const profile = details.profile;
 
     document.getElementById("studentContent").style.display = "block";
-    renderSessions(profile.upcomingSessions || []);
-
+    
     //setup sesssion booking button
     setupBookSessionButton();
     
@@ -144,69 +143,134 @@ async function loadDashboard() {
     console.log("Triggering viewAllSessions now...");
     await viewAllSessions();
     
+    // Also render any sessions from profile
+    if (profile.upcomingSessions && profile.upcomingSessions.length > 0) {
+      renderSessions(profile.upcomingSessions);
+    }
+    
   } catch (err) {
     console.error("Error loading dashboard:", err);
   }
 }
 
+// Render pending payment sessions
+function renderPendingPaymentSessions(sessions) {
+  const pendingUl = document.getElementById("pendingPaymentSessions");
+  const noPendingMsg = document.getElementById("noPendingPayment");
+  
+  if (!pendingUl) return;
+  
+  pendingUl.innerHTML = "";
+
+  // Filter sessions that need payment
+  const pendingPayment = sessions.filter(s => 
+    s.status === "accepted" && 
+    (!s.payment_status || ["pending", "failed"].includes((s.payment_status || "").toLowerCase()))
+  );
+
+  if (!pendingPayment.length) {
+    if (noPendingMsg) noPendingMsg.style.display = "block";
+    return;
+  }
+
+  if (noPendingMsg) noPendingMsg.style.display = "none";
+
+  pendingPayment.forEach(s => {
+    const li = document.createElement("li");
+    
+    const paymentStatus = s.payment_status ? s.payment_status.toLowerCase() : "unpaid";
+    const amount = s.amount || "N/A";
+    
+    li.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div><strong>${s.description || "No description"}</strong></div>
+        <div>Status: <span class="badge badge-warning">${s.status}</span> | Payment: <span class="badge badge-danger">${paymentStatus}</span></div>
+        <div>Amount: <strong>$${amount}</strong> | Scheduled: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins</div>
+        <div>
+          <button class="btn btn-primary" onclick="handlePayNowFromPending('${s.session_id}', this)">Pay Now</button>
+        </div>
+      </div>
+    `;
+    
+    pendingUl.appendChild(li);
+  });
+}
+
+// Handle Pay Now from pending payment list
+window.handlePayNowFromPending = async function(sessionId, btn) {
+  await handlePayNow(sessionId, btn);
+  // Refresh pending payments after payment
+  await viewAllSessions();
+};
+
 // Render sessions
 function renderSessions(sessions) {
   const allUl = document.getElementById("allSessions");
+  const noSessionsMsg = document.getElementById("noSessions");
+  
+  if (!allUl) return;
+  
   allUl.innerHTML = "";
 
-  if (!sessions.length) {
-    allUl.innerHTML = "<li>No sessions found.</li>";
-
+  if (!sessions || !sessions.length) {
+    if (noSessionsMsg) noSessionsMsg.style.display = "block";
     return;
   }
+
+  if (noSessionsMsg) noSessionsMsg.style.display = "none";
 
   sessions.forEach(s => {
     const li = document.createElement("li");
 
     // Payment status
     let paymentText = "unpaid";
+    let paymentBadge = "badge-danger";
     if (!s.payment_status) {
       paymentText = "unpaid";
     } else if (s.payment_status.toLowerCase() === "success") {
       paymentText = "paid";
+      paymentBadge = "badge-success";
     } else {
       paymentText = s.payment_status.toLowerCase();
+      paymentBadge = "badge-warning";
     }
 
-    // Base text
-    li.textContent = `${s.description} | ${s.status} | Payment: ${paymentText}`;
-    if (s.status === "accepted" || s.status === "scheduled") li.textContent += ` | Amount: ${s.amount}`;
-    li.textContent += ` | Scheduled at: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins`;
+    // Status badge
+    let statusBadge = "badge-info";
+    if (s.status === "accepted") statusBadge = "badge-success";
+    else if (s.status === "pending") statusBadge = "badge-warning";
+    else if (s.status === "rejected") statusBadge = "badge-danger";
 
-
-    // Show Pay Now button if eligible
-    if (
-      s.status === "accepted" &&
-      (!s.payment_status || ["pending", "failed"].includes(s.payment_status.toLowerCase()))
-    ) {
-      const btn = document.createElement("button");
-      btn.textContent = "Pay Now";
-      btn.addEventListener("click", () => handlePayNow(s.session_id, btn));
-      li.appendChild(document.createTextNode(" "));
-      li.appendChild(btn);
-    }
-
-    // Handle meeting link visibility
-    if (s.meeting_scheduled && s.meeting_link) {
-      const link = document.createElement("a");
-      link.href = s.meeting_link;
-      link.textContent = "Join Zoom";
-      link.target = "_blank"; // open in new tab
-      li.appendChild(document.createTextNode(" | Zoom Link: "));
-      li.appendChild(link);
-    }
-    else if (s.meeting_scheduled && !s.meeting_link) {
-      // Scheduled but link hidden (more than 2 min away)
-      li.textContent += ` | Meeting scheduled. Link will be shared 2 minutes before session.`;
-    }
+    // Create structured content
+    li.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div><strong>${s.description || "No description"}</strong></div>
+        <div>
+          Status: <span class="badge ${statusBadge}">${s.status}</span> | 
+          Payment: <span class="badge ${paymentBadge}">${paymentText}</span>
+          ${(s.status === "accepted" || s.status === "scheduled") && s.amount ? ` | Amount: <strong>$${s.amount}</strong>` : ''}
+        </div>
+        <div>
+          Scheduled: ${formatLocalTime(s.local_start_time)} | Duration: ${s.duration_minutes} mins
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${s.status === "accepted" && (!s.payment_status || ["pending", "failed"].includes((s.payment_status || "").toLowerCase())) 
+            ? `<button class="btn btn-primary" onclick="handlePayNowFromPending('${s.session_id}', this)">Pay Now</button>` 
+            : ''}
+          ${s.meeting_scheduled && s.meeting_link 
+            ? `<a href="${s.meeting_link}" target="_blank" class="btn btn-success">Join Zoom</a>` 
+            : s.meeting_scheduled && !s.meeting_link 
+            ? `<span class="badge badge-info">Meeting scheduled. Link will be shared 2 minutes before session.</span>` 
+            : ''}
+        </div>
+      </div>
+    `;
 
     allUl.appendChild(li);
   });
+  
+  // Also render pending payment sessions
+  renderPendingPaymentSessions(sessions);
 }
 
 // Handle Pay Now click
@@ -231,7 +295,17 @@ async function handlePayNow(sessionId, btn) {
 
       const data = await res.json();
       if (data.success) {
-        alert("Payment successful!");
+        // Show success message
+        const messageEl = document.createElement('div');
+        messageEl.className = "message message-success";
+        messageEl.textContent = "Payment successful!";
+        messageEl.style.position = "fixed";
+        messageEl.style.top = "20px";
+        messageEl.style.right = "20px";
+        messageEl.style.zIndex = "10000";
+        document.body.appendChild(messageEl);
+        setTimeout(() => messageEl.remove(), 3000);
+        
         await viewAllSessions();
       } else {
         alert(data.message || "Payment failed");
@@ -256,10 +330,29 @@ function enableProfileEditing(details) {
     document.getElementById("studentContent").style.display = "none";
     document.getElementById("studentProfileForm").style.display = "block";
 
-    document.querySelector("input[name='education_level']").value = details.education_level || "";
-    document.querySelector("input[name='subject_tags']").value = (details.subject_tags || []).join(", ");
+    // Set education level
+    const educationSelect = document.getElementById("education_level");
+    if (educationSelect && details.education_level) {
+      educationSelect.value = details.education_level;
+    }
 
-    setupProfileForm();
+    // Set subjects (will be handled by setupProfileForm)
+    const existingSubjects = details.subject_tags || [];
+    
+    setupProfileForm().then(() => {
+      // After form is set up, check the existing subjects
+      if (existingSubjects.length > 0) {
+        setTimeout(() => {
+          existingSubjects.forEach(subject => {
+            const checkbox = document.querySelector(`#subject_tags_container input[value="${subject}"]`);
+            if (checkbox) checkbox.checked = true;
+          });
+          // Trigger change to update hidden input
+          const event = new Event('change');
+          document.getElementById('subject_tags_container').dispatchEvent(event);
+        }, 100);
+      }
+    });
   }, { once: true });
 }
 
@@ -270,6 +363,41 @@ function setupProfileForm() {
   form.replaceWith(cleanForm);
   const newForm = document.getElementById("profileForm");
 
+  // Populate education level dropdown and subjects
+  (async () => {
+    try {
+      const { educationLevels, subjects, createMultiSelect } = await import('../shared/options.js');
+      
+      // Populate education level datalist (editable dropdown)
+      const educationInput = document.getElementById("education_level");
+      const educationDatalist = document.getElementById("education_level_list");
+      if (educationInput && educationDatalist) {
+        educationLevels.forEach(level => {
+          const option = document.createElement('option');
+          option.value = level;
+          educationDatalist.appendChild(option);
+        });
+      }
+
+      // Create multi-select for subjects
+      const getSelectedSubjects = createMultiSelect('subject_tags_container', subjects);
+      
+      // Update hidden input when checkboxes change
+      const container = document.getElementById('subject_tags_container');
+      if (container) {
+        container.addEventListener('change', () => {
+          const selected = getSelectedSubjects();
+          const hiddenInput = document.getElementById('subject_tags');
+          if (hiddenInput) {
+            hiddenInput.value = selected.join(', ');
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error loading options:", err);
+    }
+  })();
+
   newForm.addEventListener("submit", async e => {
     e.preventDefault();
 
@@ -277,16 +405,33 @@ function setupProfileForm() {
     const user = await checkToken();
     if (!user) return; // stop if token expired
 
-    const formData = new FormData(newForm);
-    const body = Object.fromEntries(formData.entries());
-
-    // Convert tags to array
-    if (typeof body.subject_tags === "string") {
-      body.subject_tags = body.subject_tags
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
+    // Get selected subjects from checkboxes
+    const subjectCheckboxes = document.querySelectorAll('#subject_tags_container input[type="checkbox"]:checked');
+    const selectedSubjects = Array.from(subjectCheckboxes).map(cb => cb.value);
+    
+    const educationLevel = document.getElementById("education_level").value;
+    
+    if (!educationLevel) {
+      document.getElementById("profileMessage").className = "message message-error";
+      document.getElementById("profileMessage").textContent = "Please select an education level";
+      document.getElementById("profileMessage").classList.remove("hidden");
+      return;
     }
+
+    if (selectedSubjects.length === 0) {
+      document.getElementById("profileMessage").className = "message message-error";
+      document.getElementById("profileMessage").textContent = "Please select at least one subject";
+      document.getElementById("profileMessage").classList.remove("hidden");
+      return;
+    }
+
+    const body = {
+      education_level: educationLevel,
+      subject_tags: selectedSubjects
+    };
+
+    const messageEl = document.getElementById("profileMessage");
+    messageEl.classList.add("hidden");
 
     try {
       const res = await fetch("/student/profile", {
@@ -295,18 +440,30 @@ function setupProfileForm() {
         credentials: "include",
         body: JSON.stringify(body)
       });
+      
       const data = await res.json().catch(() => ({}));
-      document.getElementById("profileMessage").textContent = res.ok ? data.message || "Profile saved" : data.error || "Failed to save profile";
-
+      
       if (res.ok) {
-        document.getElementById("studentProfileForm").style.display = "none";
-        document.getElementById("studentContent").style.display = "block";
-        await viewAllSessions();
+        messageEl.className = "message message-success";
+        messageEl.textContent = data.message || "Profile saved successfully!";
+        messageEl.classList.remove("hidden");
+        
+        setTimeout(() => {
+          document.getElementById("studentProfileForm").style.display = "none";
+          document.getElementById("studentContent").style.display = "block";
+          viewAllSessions();
+        }, 1500);
+      } else {
+        messageEl.className = "message message-error";
+        messageEl.textContent = data.error || "Failed to save profile. Please try again.";
+        messageEl.classList.remove("hidden");
       }
 
     } catch (err) {
       console.error("Error saving profile:", err);
-      document.getElementById("profileMessage").textContent = "Server error";
+      messageEl.className = "message message-error";
+      messageEl.textContent = "Server error. Please check your connection and try again.";
+      messageEl.classList.remove("hidden");
     }
   }, { once: true });
 }
@@ -314,7 +471,11 @@ function setupProfileForm() {
 // Book session button
 function setupBookSessionButton() {
   const btn = document.getElementById("book-ssn-btn");
-  btn.addEventListener("click", async() => {
+  // Remove existing listeners by cloning
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  newBtn.addEventListener("click", async() => {
     const user = await checkToken();
     if (!user) return;
     window.location.href = "/student/book_session.html";

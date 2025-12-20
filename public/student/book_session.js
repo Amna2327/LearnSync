@@ -102,8 +102,7 @@ async function filterInstructors() {
         <p>Subjects: ${subjectTags}</p>
         <p>Education Levels: ${educationLevels}</p>
         <p>Demo Material: ${demoLinksHTML}</p>
-        <button onclick="selectInstructor(${instr.id})">Select</button>
-        <hr>
+        <button class="btn btn-primary" onclick="selectInstructor(${instr.id}, this)">Select</button>
     `;
         resultsDiv.appendChild(div);
     });
@@ -112,9 +111,19 @@ async function filterInstructors() {
 }
 
 // -------------------- SELECT INSTRUCTOR --------------------
-function selectInstructor(id) {
+function selectInstructor(id, buttonElement) {
     document.getElementById("selected_instructor").value = id;
-    alert("Selected Instructor ID: " + id);
+    
+    // Remove selected class from all instructor cards
+    document.querySelectorAll('.instructor-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to the clicked card
+    buttonElement.closest('.instructor-card').classList.add('selected');
+    
+    // Enable submit button
+    document.getElementById("submit_btn").disabled = false;
 }
 
 // -------------------- SUBMIT SESSION REQUEST --------------------
@@ -153,9 +162,16 @@ async function submitSession() {
 document.getElementById("filter_btn").onclick = filterInstructors;
 document.getElementById("submit_btn").onclick = submitSession;
 
-// -------------------- LOAD TIMEZONES --------------------
+// -------------------- LOAD TIMEZONES AND DURATIONS --------------------
 document.addEventListener("DOMContentLoaded", async () => {
-    const timeZoneSelect = document.getElementById("time_zone");
+    // Load timezones (editable dropdown)
+    const timeZoneInput = document.getElementById("time_zone");
+    const timeZoneDatalist = document.createElement("datalist");
+    timeZoneDatalist.id = "time_zone_list";
+    timeZoneInput.setAttribute("list", "time_zone_list");
+    timeZoneInput.setAttribute("placeholder", "Type or select timezone");
+    timeZoneInput.parentElement.appendChild(timeZoneDatalist);
+    
     try {
         const res = await fetch("../timezones.json");
         const timeZones = await res.json();
@@ -163,13 +179,48 @@ document.addEventListener("DOMContentLoaded", async () => {
             const option = document.createElement("option");
             option.value = tz.value;
             option.textContent = tz.label;
-            timeZoneSelect.appendChild(option);
+            timeZoneDatalist.appendChild(option);
         });
     } catch (err) {
         console.error("Error loading time zones:", err);
         const option = document.createElement("option");
         option.value = "UTC";
         option.textContent = "UTC";
-        timeZoneSelect.appendChild(option);
+        timeZoneDatalist.appendChild(option);
+    }
+    
+    // Load subject suggestions (editable dropdown)
+    try {
+        const { subjects } = await import('../shared/options.js');
+        const subjectInput = document.getElementById("subject_tags");
+        const subjectDatalist = document.getElementById("subject_tags_list");
+        
+        if (subjectInput && subjectDatalist) {
+            subjects.forEach(subject => {
+                const option = document.createElement("option");
+                option.value = subject;
+                subjectDatalist.appendChild(option);
+            });
+        }
+    } catch (err) {
+        console.error("Error loading subjects:", err);
+    }
+    
+    // Load duration options (editable dropdown)
+    try {
+        const { sessionDurations } = await import('../shared/options.js');
+        const durationInput = document.getElementById("duration_minutes");
+        const durationDatalist = document.getElementById("duration_list");
+        
+        if (durationInput && durationDatalist) {
+            sessionDurations.forEach(duration => {
+                const option = document.createElement("option");
+                option.value = duration.value;
+                option.textContent = duration.label;
+                durationDatalist.appendChild(option);
+            });
+        }
+    } catch (err) {
+        console.error("Error loading durations:", err);
     }
 });

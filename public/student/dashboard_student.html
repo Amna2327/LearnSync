@@ -3,40 +3,72 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard - LearnSync</title>
+  <link rel="stylesheet" href="../shared/style.css" />
 </head>
 
 <body>
-  <h2>Student Dashboard</h2>
-  <p id="userInfo"></p>
+  <div class="dashboard-container">
+    <div class="header">
+      <h2>🎓 Student Dashboard</h2>
+      <div class="header-actions">
+        <div class="user-info" id="userInfo"></div>
+        <button id="logout-btn" class="btn btn-outline">Logout</button>
+      </div>
+    </div>
 
-  <button id="logout-btn">Logout</button> 
+    <!-- Dashboard content -->
+    <div id="studentContent">
+      <div class="card">
+        <div class="card-header">
+          <h3>⚡ Quick Actions</h3>
+        </div>
+        <div class="btn-group">
+          <button id="editProfileBtn" class="btn btn-secondary">✏️ Update Profile</button>
+          <button id="book-ssn-btn" class="btn btn-primary">📅 Book New Session</button>
+        </div>
+      </div>
 
-  <!-- Dashboard content -->
-  <div id="studentContent">
-    <button id="editProfileBtn">Update Profile</button>
+      <div class="card">
+        <div class="card-header">
+          <h3>💳 Sessions Pending Payment</h3>
+        </div>
+        <ul id="pendingPaymentSessions" class="list"></ul>
+        <p id="noPendingPayment" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No sessions pending payment</p>
+      </div>
 
-    <h3>Sessions Pending Payment</h3>
-    <ul id="pendingPaymentSessions"></ul>
+      <div class="card">
+        <div class="card-header">
+          <h3>📚 All Sessions</h3>
+        </div>
+        <ul id="allSessions" class="list"></ul>
+        <p id="noSessions" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No sessions yet</p>
+      </div>
+    </div>
 
-    <h3>All Sessions</h3>
-    <ul id="allSessions"></ul>
+    <!-- Profile form for first-time students -->
+    <div id="studentProfileForm" class="card" style="display:none">
+      <div class="card-header">
+        <h3>Complete Your Profile</h3>
+      </div>
+      <form id="profileForm">
+        <div class="form-group">
+          <label for="education_level">Education Level</label>
+          <input type="text" id="education_level" name="education_level" list="education_level_list" required placeholder="Type or select your education level">
+          <datalist id="education_level_list"></datalist>
+        </div>
+        <div class="form-group">
+          <label for="subject_tags">Subjects</label>
+          <div id="subject_tags_container"></div>
+          <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">Select all subjects you're interested in</small>
+          <input type="hidden" id="subject_tags" name="subject_tags" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+      </form>
+      <p id="profileMessage" class="message hidden"></p>
+    </div>
   </div>
-
-  <!-- Profile form for first-time students -->
-  <div id="studentProfileForm" style="display:none">
-    <h3>Complete Your Profile</h3>
-    <form id="profileForm">
-      <label>Education Level:</label>
-      <input type="text" name="education_level" required /><br />
-      <label>Subjects (comma separated):</label>
-      <input type="text" name="subject_tags" required /><br />
-      <button type="submit">Save Profile</button>
-    </form>
-    <p id="profileMessage"></p>
-  </div>
-
-  <button id="book-ssn-btn">Book Session</button>
 
   <script src="dashboard_student.js"></script>
 </body>

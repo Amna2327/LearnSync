@@ -76,18 +76,46 @@ async function loadDashboard() {
             headers: {},
             credentials: "include" 
         });
-        const pending = await pendingRes.json();
-
+        
+        if (!pendingRes.ok) {
+            console.error("Failed to fetch pending instructors");
+            return;
+        }
+        
+        const pending = await pendingRes.json() || [];
         const pendingUl = document.getElementById('pendingInstructors');
+        const noPendingMsg = document.getElementById('noPendingInstructors');
+        
+        if (!pendingUl) return;
+        
         pendingUl.innerHTML = '';
+
+        if (!pending || pending.length === 0) {
+            if (noPendingMsg) noPendingMsg.style.display = "block";
+            return;
+        }
+
+        if (noPendingMsg) noPendingMsg.style.display = "none";
 
         pending.forEach(inst => {
             const li = document.createElement('li');
+            const name = inst.name || "Unknown";
+            const email = inst.email || "No email";
+            const timeZone = inst.time_zone || "UTC";
+            
             li.innerHTML = `
-                ${inst.name} - ${inst.email} | ${inst.time_zone} 
-                <button class="approveBtn" data-id="${inst.id}">Approve</button>
-                <button class="rejectBtn" data-id="${inst.id}">Reject</button>
-                <button class="viewDocsBtn" data-id="${inst.id}">View Docs</button>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div>
+                        <strong>Name:</strong> ${name} | 
+                        <strong>Email:</strong> ${email} | 
+                        <strong>Time Zone:</strong> ${timeZone}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-success approveBtn" data-id="${inst.id}">✅ Approve</button>
+                        <button class="btn btn-danger rejectBtn" data-id="${inst.id}">❌ Reject</button>
+                        <button class="btn btn-secondary viewDocsBtn" data-id="${inst.id}">📄 View Documents</button>
+                    </div>
+                </div>
             `;
             pendingUl.appendChild(li);
         });

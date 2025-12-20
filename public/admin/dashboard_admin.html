@@ -3,17 +3,31 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - LearnSync</title>
+    <link rel="stylesheet" href="../shared/style.css" />
 </head>
 
 <body>
-    <h2>Admin Dashboard</h2>
-    <button id="logout-btn"> Logout </button>
-    <p id="userInfo"></p>
+    <div class="dashboard-container">
+    <div class="header">
+      <h2>👑 Admin Dashboard</h2>
+      <div class="header-actions">
+        <div class="user-info" id="userInfo"></div>
+        <button id="logout-btn" class="btn btn-outline">Logout</button>
+      </div>
+    </div>
 
     <div id="adminContent">
-        <h3>Pending Instructor Approvals</h3>
-        <ul id="pendingInstructors"></ul>
+      <div class="card">
+        <div class="card-header">
+          <h3>⏳ Pending Instructor Approvals</h3>
+          <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">Review and approve instructor applications</p>
+        </div>
+        <ul id="pendingInstructors" class="list"></ul>
+        <p id="noPendingInstructors" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No pending instructor approvals</p>
+      </div>
+    </div>
     </div>
 
     <script src="dashboard_admin.js"></script>

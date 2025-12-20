@@ -3,60 +3,84 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Create Session</title>
-    <style>
-        .instructor-card {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-        }
-
-        .demo-material-list {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .demo-material-list li {
-            margin-bottom: 5px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Session - LearnSync</title>
+    <link rel="stylesheet" href="../shared/style.css" />
 </head>
 
 <body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h2>📅 Book a Session</h2>
+            <div class="header-actions">
+                <a href="dashboard_student.html" class="btn btn-outline">← Back to Dashboard</a>
+                <button id="logout-btn" class="btn btn-outline">Logout</button>
+            </div>
+        </div>
 
-    <button id="logout-btn">Logout</button>
-    <h2>Create Session</h2>
+        <div class="card">
+            <div class="card-header">
+                <h3>📝 Session Details</h3>
+            </div>
+            <form id="sessionForm">
+                <div class="form-group">
+                    <label for="session_desc">Session Description</label>
+                    <textarea id="session_desc" rows="4" placeholder="Describe what you'd like to learn or discuss in this session"></textarea>
+                </div>
 
-    <!-- SESSION BASIC INFO -->
-    <label>Session Description</label><br>
-    <textarea id="session_desc"></textarea><br><br>
+                <div class="form-group">
+                    <label for="start_time">Start Time</label>
+                    <input type="datetime-local" id="start_time" required>
+                </div>
 
-    <label>Start Time</label><br>
-    <input type="datetime-local" id="start_time"><br><br>
+                <div class="form-group">
+                    <label for="duration_minutes">Duration (minutes)</label>
+                    <input type="number" id="duration_minutes" name="duration_minutes" list="duration_list" min="1" required placeholder="Type or select duration">
+                    <datalist id="duration_list"></datalist>
+                </div>
 
-    <label>Duration (minutes)</label><br>
-    <input type="number" id="duration_minutes" min="1"><br><br>
+                <div class="form-group">
+                    <label for="selected_instructor">Selected Instructor ID</label>
+                    <input type="text" id="selected_instructor" readonly placeholder="Select an instructor below">
+                </div>
+            </form>
+        </div>
 
-    <label>Selected Instructor ID</label><br>
-    <input type="text" id="selected_instructor" readonly><br><br>
+        <div class="card">
+            <div class="card-header">
+                <h3>🔍 Filter Instructors</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">Leave filters empty to see all instructors</p>
+            </div>
+            <div class="filter-section">
+                <div class="form-group">
+                    <label for="subject_tags">Subject Tags</label>
+                    <input type="text" id="subject_tags" list="subject_tags_list" placeholder="Type or select subjects (comma-separated)">
+                    <datalist id="subject_tags_list"></datalist>
+                    <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">You can type manually or select from suggestions</small>
+                </div>
 
-    <h3>Filter Instructors (Leave empty for no filters)</h3>
+                <div class="form-group">
+                    <label for="time_zone">Time Zone</label>
+                    <input type="text" id="time_zone" list="time_zone_list" placeholder="Type or select timezone">
+                    <datalist id="time_zone_list"></datalist>
+                </div>
 
-    <label>Subject Tags (comma-separated)</label><br>
-    <input type="text" id="subject_tags"><br><br>
+                <button id="filter_btn" class="btn btn-primary">Search Instructors</button>
+            </div>
+        </div>
 
-    <select id="time_zone">
-        <option value="">Select Time Zone</option>
-    </select><br><br>
+        <div class="card">
+            <div class="card-header">
+                <h3>👨‍🏫 Matching Instructors</h3>
+            </div>
+            <div id="filter-results" class="instructor-grid"></div>
+            <p id="noInstructors" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No instructors found. Try adjusting your filters.</p>
+        </div>
 
-    <button id="filter_btn">Filter</button>
-
-    <h3>Matching Instructors</h3>
-    <div id="filter-results"></div>
-
-    <br><br>
-    <button id="submit_btn">Send Session Request</button>
+        <div class="card">
+            <button id="submit_btn" class="btn btn-primary btn-full" disabled>Send Session Request</button>
+        </div>
+    </div>
 
     <script src="book_session.js"></script>
 </body>
