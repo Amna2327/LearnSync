@@ -27,11 +27,22 @@ export async function getInstructorProfile(req, res) {
 export async function uploadInstructorFiles(req, res) {
     try {
         const instructorId = req.user.id;
-        if (!instructorId) throw new Error("Instructor not found");
+        if (!instructorId) {
+            return res.status(401).json({ error: "Instructor not found. Please log in again." });
+        }
 
-        // Files
-        const certificationsFiles = req.files["certifications"] || [];
-        const demoMaterialFiles = req.files["demo_material"] || [];
+        console.log("Upload request received for instructor:", instructorId);
+        console.log("Request body:", req.body);
+        console.log("Request files:", req.files);
+
+        // Files (handle both single file and array)
+        const certificationsFiles = Array.isArray(req.files["certifications"]) 
+            ? req.files["certifications"] 
+            : (req.files["certifications"] ? [req.files["certifications"]] : []);
+        
+        const demoMaterialFiles = Array.isArray(req.files["demo_material"]) 
+            ? req.files["demo_material"] 
+            : (req.files["demo_material"] ? [req.files["demo_material"]] : []);
 
         const certificationsUrls = certificationsFiles.map(f => `/uploads/${f.filename}`);
         const demoMaterialUrls = demoMaterialFiles.map(f => `/uploads/${f.filename}`);
@@ -39,9 +50,33 @@ export async function uploadInstructorFiles(req, res) {
         // Extra fields from form
         const { subject_tags, education_level_tags } = req.body;
 
+        console.log("Parsed data:", {
+            certifications: certificationsUrls.length,
+            demoMaterials: demoMaterialUrls.length,
+            subject_tags,
+            education_level_tags
+        });
+
+        // Validate required fields
+        if (!subject_tags || subject_tags.trim() === '') {
+            return res.status(400).json({ error: "Please select at least one subject" });
+        }
+
+        if (!education_level_tags || education_level_tags.trim() === '') {
+            return res.status(400).json({ error: "Please select at least one education level" });
+        }
+
         // Convert comma-separated strings to arrays
-        const subjectsArray = subject_tags ? subject_tags.split(",").map(s => s.trim()) : [];
-        const educationLevelsArray = education_level_tags ? education_level_tags.split(",").map(s => s.trim()) : [];
+        const subjectsArray = subject_tags.split(",").map(s => s.trim()).filter(s => s.length > 0);
+        const educationLevelsArray = education_level_tags.split(",").map(s => s.trim()).filter(s => s.length > 0);
+
+        if (subjectsArray.length === 0) {
+            return res.status(400).json({ error: "Please select at least one subject" });
+        }
+
+        if (educationLevelsArray.length === 0) {
+            return res.status(400).json({ error: "Please select at least one education level" });
+        }
 
         // Call service to update DB
         await saveInstructorFiles(
@@ -52,10 +87,16 @@ export async function uploadInstructorFiles(req, res) {
             educationLevelsArray
         );
 
-        res.status(200).json({ message: "Instructor profile updated successfully" });
+        console.log("Instructor profile saved successfully");
+        res.status(200).json({ 
+            message: "Instructor profile updated successfully! Your profile is pending admin approval." 
+        });
     } catch (err) {
         console.error("Error uploading instructor files:", err);
-        res.status(500).json({ error: "Failed to upload instructor profile" });
+        console.error("Error stack:", err.stack);
+        res.status(500).json({ 
+            error: err.message || "Failed to upload instructor profile. Please try again." 
+        });
     }
 }
 

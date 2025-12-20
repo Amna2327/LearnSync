@@ -39,7 +39,32 @@ export async function signup(req, res) {
     try {
         const { name, email, password, role, timeZone } = req.body;
 
-        const result = await signupService(name, email, password, role, timeZone);
+        // Validate required fields
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({ 
+                error: "Missing required fields. Please provide name, email, password, and role." 
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                error: "Invalid email format." 
+            });
+        }
+
+        // Validate role
+        if (role !== "student" && role !== "instructor") {
+            return res.status(400).json({ 
+                error: "Invalid role. Role must be 'student' or 'instructor'." 
+            });
+        }
+
+        // Use UTC as default if timeZone is not provided
+        const finalTimeZone = timeZone || "UTC";
+
+        const result = await signupService(name, email, password, role, finalTimeZone);
         console.log("noice signup");
 
         const { token, message, user } = result;
@@ -58,8 +83,26 @@ export async function signup(req, res) {
         });
 
     } catch (err) {
-        console.log("error in signup");
-        return res.status(400).json({ error: err.message });
+        console.log("error in signup:", err.message);
+        console.log("Full error:", err);
+        
+        // Provide user-friendly error messages
+        let errorMessage = err.message || "Signup failed. Please try again.";
+        
+        // Map common database errors to user-friendly messages
+        if (errorMessage.includes("Email already exists") || errorMessage.includes("already registered")) {
+            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+        } else if (errorMessage.includes("Database connection") || errorMessage.includes("connection failed") || errorMessage.includes("ECONNREFUSED")) {
+            errorMessage = "Cannot connect to database. Please ensure PostgreSQL is running and check your database configuration.";
+        } else if (errorMessage.includes("Table not found") || errorMessage.includes("does not exist")) {
+            errorMessage = "Database tables not found. Please run the SQL script: database_learnsync.sql";
+        } else if (errorMessage.includes("authentication failed") || errorMessage.includes("28P01")) {
+            errorMessage = "Database authentication failed. Please check your PostgreSQL password in the .env file.";
+        } else if (errorMessage.includes("Database not found") || errorMessage.includes("3D000")) {
+            errorMessage = "Database 'learnsync_database' not found. Please create it first.";
+        }
+        
+        return res.status(400).json({ error: errorMessage });
     }
 }
 export async function logout(req, res){
