@@ -58,11 +58,13 @@
                     <datalist id="subject_tags_list"></datalist>
                     <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">You can type manually or select from suggestions</small>
                 </div>
-
+ 
                 <div class="form-group">
                     <label for="time_zone">Time Zone</label>
-                    <input type="text" id="time_zone" list="time_zone_list" placeholder="Type or select timezone">
-                    <datalist id="time_zone_list"></datalist>
+                    <select id="time_zone" required>
+                        <option value="">Loading timezones...</option>
+                    </select>
+
                 </div>
 
                 <button id="filter_btn" class="btn btn-primary">Search Instructors</button>
