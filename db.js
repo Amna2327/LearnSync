@@ -1,17 +1,45 @@
-import mysql from 'mysql2';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config(); // load env
+dotenv.config(); // loads .env
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-}).promise()
+const pool = new Pool({
+    host: process.env.PGHOST || 'localhost',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+    port: process.env.PGPORT || 5432,
+    // Connection pool settings
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+});
 
-export default pool; //exports the connection for reuse later
+// Test connection on startup
+pool.on('connect', () => {
+    console.log('✅ Database connection established');
+});
+
+pool.on('error', (err) => {
+    console.error('❌ Unexpected database error:', err);
+});
+
+// Test connection function
+export async function testConnection() {
+    try {
+        const result = await pool.query('SELECT NOW()');
+        console.log('✅ Database connection test successful:', result.rows[0]);
+        return true;
+    } catch (err) {
+        console.error('❌ Database connection test failed:', {
+            message: err.message,
+            code: err.code,
+            host: process.env.PGHOST,
+            database: process.env.PGDATABASE,
+            user: process.env.PGUSER
+        });
+        return false;
+    }
+}
+
+export default pool;

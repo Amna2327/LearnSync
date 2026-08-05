@@ -1,0 +1,158 @@
+import { getInstructorDetails, insertInstructorDetails, updateInstructorDetails, getInstructorsByTags, getInstructorSessions } from "../databases/userDatabase.js";
+import { DateTime } from "luxon";
+import { acceptSessionWithPayment_transactional, rejectSession } from "../databases/sessionDatabase.js";
+import { getPaymentAmountfromSessionID } from "../databases/sessionDatabase.js"
+
+/**
+ * Save or update instructor profile including:
+ * - certifications (array of URLs)
+ * - demoMaterials (array of URLs)
+ * - subjectTags (array of strings)
+ * - educationLevels (array of strings)
+ */
+export async function saveInstructorFiles(
+    instructorId,
+    certifications = [],
+    demoMaterials = [],
+    subjectTags = [],
+    educationLevels = []
+) {
+    const details = await getInstructorDetails(instructorId);
+
+    if (!details) {
+        // Insert new row
+        await insertInstructorDetails(
+            instructorId,
+            certifications,
+            demoMaterials,
+            subjectTags,
+            educationLevels
+        );
+    } else {
+        // Append to existing arrays
+        const existingCerts = details.certifications || [];
+        const existingDemo = details.demo_material || [];
+        const existingSubjects = details.subject_tags || [];
+        const existingEducationLevels = details.education_level_tags || [];
+
+        await updateInstructorDetails(
+            instructorId,
+            [...existingCerts, ...certifications],
+            [...existingDemo, ...demoMaterials],
+            [...existingSubjects, ...subjectTags],
+            [...existingEducationLevels, ...educationLevels]
+        );
+    }
+}
+
+export async function getTaggedInstructorInfo(time_zone, subjectTags = []) {
+    console.log("Service - getTaggedInstructorInfo called with:", { time_zone, subjectTags });
+    return getInstructorsByTags(subjectTags, time_zone);
+}
+
+// Get student sessions with timezone conversion
+export async function getInstructorSessionsService(instructorId, userTimeZone) {
+    const sessions = await getInstructorSessions(instructorId);
+    const nowUtc = DateTime.utc();
+
+    // ✅ Use Promise.all with async map
+    const convertedSessions = await Promise.all(
+        sessions.map(async (s) => {  // ✅ Add async here
+            // Robust UTC parsing
+            let dtUtc;
+            if (typeof s.start_time === "string") {
+                let isoString = s.start_time.replace(' ', 'T');
+                if (!isoString.endsWith('Z')) {
+                    isoString += 'Z';
+                }
+                dtUtc = DateTime.fromISO(isoString, { zone: 'utc' });
+            } else if (s.start_time instanceof Date) {
+                dtUtc = DateTime.fromJSDate(s.start_time, { zone: 'utc' });
+            } else {
+                console.error("Invalid start_time:", s.start_time);
+                return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+            }
+
+            if (!dtUtc.isValid) {
+                console.error("Invalid Luxon DateTime:", s.start_time);
+                return { ...s, local_start_time: null, meeting_link: null, meeting_scheduled: false };
+            }
+
+            // Local time for display
+            const localTime = dtUtc.setZone(userTimeZone).toISO({ suppressMilliseconds: true });
+            console.log("LOCAL TIME IN SERVICE LAYER WHEN RENDERING SESSIONS: ", localTime);
+            
+            // ✅ Now you can use await
+            let amount = null;
+            try {
+                const paymentResult = await getPaymentAmountfromSessionID(s.session_id); // ✅ This works now
+                console.log("Payment result raw:", paymentResult);
+                
+                if (paymentResult && paymentResult.length > 0) {
+                    const paymentRow = paymentResult[0];
+                    console.log("Payment row:", paymentRow);
+                    
+                    amount = parseFloat(paymentRow.amount);
+                    console.log("Parsed amount:", amount, "Type:", typeof amount);
+                }
+            } catch (err) {
+                console.error("Error fetching payment amount:", err);
+            }
+
+            // Initialize meeting info
+            let meetingLink = s.meeting_link || null;
+            let meetingScheduled = !!meetingLink;
+
+            if (meetingLink) {
+                const endDtUtc = dtUtc.plus({ minutes: Number(s.duration_minutes) });
+                if (nowUtc >= endDtUtc) {
+                    meetingLink = null;
+                    meetingScheduled = false;
+                } else if (dtUtc.diff(nowUtc, 'minutes').minutes > 2) {
+                    meetingLink = null;
+                    meetingScheduled = true;
+                } else {
+                    meetingScheduled = true;
+                }
+            }
+
+            return {
+                ...s,
+                amount: amount,
+                local_start_time: localTime,
+                payment_status: s.payment_status || null,
+                meeting_link: meetingLink,
+                meeting_scheduled: meetingScheduled
+            };
+        })
+    );
+
+    return convertedSessions;
+}
+
+
+/**
+ * Called when instructor accepts/rejects a session.
+ * - If accept: updates session.status to 'accepted', sets amount, creates payment entry (pending).
+ * - If reject: updates session.status to 'rejected'.
+ *
+ * Returns the updated session row (object) on success, otherwise null/false.
+ */
+
+// Update session status by instructor
+export async function updateSessionStatusByInstructor(sessionId, instructorId, action, amount) {
+    if (action === "accept") {
+        // Use the transactional DB function
+        const result = await acceptSessionWithPayment_transactional(sessionId, instructorId, amount);
+        return result ? result.session : null;
+
+    } else if (action === "reject") {
+        const session = await rejectSession(sessionId, instructorId);
+        return session || null;
+
+    } else {
+        return null;
+    }
+}
+
+

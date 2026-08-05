@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LearnSync Signup</title>
+    <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div class="auth-page-container">
+            <a href="../index.html" class="back-to-home btn btn-outline-white">
+                ← Back to Home
+            </a>
+            
+            <div class="form-container">
+                <div class="card-header">
+                    <h2 class="auth-title">Create a LearnSync Account</h2>
+                    <p class="auth-subtitle">Join our learning community today</p>
+                </div>
+                
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" required placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required placeholder="Enter your email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="Create a strong password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">I want to:</label>
+                        <div class="role-selection">
+                            <button type="button" class="role-btn" data-role="student">
+                                <span class="role-icon">📚</span>
+                                <span class="role-text">Learn as Student</span>
+                            </button>
+                            <button type="button" class="role-btn" data-role="instructor">
+                                <span class="role-icon">👨‍🏫</span>
+                                <span class="role-text">Teach as Instructor</span>
+                            </button>
+                        </div>
+                        <select id="role" required style="display: none;">
+                            <option value="student" selected>Student</option>
+                            <option value="instructor">Instructor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeZone">Time Zone</label>
+                        <select id="timeZone" required>
+                            <option value="UTC" selected>Loading timezones...</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                </form>
+                
+                <div class="password-requirements">
+                    <p class="requirements-text">Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 digit with minimum length of 8 characters.</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <p style="color: var(--text-light);">Already have an account? 
+                        <a href="login.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Login here</a>
+                    </p>
+                </div>
+
+                <p id="message" class="message hidden"></p>
+            </div>
+        </div>
+
+        <script src="signup.js"></script>
+        <script>
+            // Role selection buttons functionality
+            document.addEventListener('DOMContentLoaded', () => {
+                const roleButtons = document.querySelectorAll('.role-btn');
+                const roleSelect = document.getElementById('role');
+                
+                // Ensure role select has a value
+                if (roleSelect && !roleSelect.value) {
+                    roleSelect.value = 'student';
+                }
+                
+                roleButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Remove active class from all buttons
+                        roleButtons.forEach(b => b.classList.remove('active'));
+                        // Add active class to clicked button
+                        btn.classList.add('active');
+                        // Update select value
+                        if (roleSelect && btn.dataset.role) {
+                            roleSelect.value = btn.dataset.role;
+                        }
+                    });
+                });
+                
+                // Set default to student
+                if (roleButtons.length > 0) {
+                    roleButtons[0].classList.add('active');
+                    if (roleSelect) {
+                        roleSelect.value = 'student';
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

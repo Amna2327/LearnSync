@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instructor Dashboard - LearnSync</title>
+    <link rel="stylesheet" href="../shared/style.css" />
+</head>
+
+<body>
+    <div class="dashboard-container">
+    <div class="header">
+      <h2>👨‍🏫 Instructor Dashboard</h2>
+      <div class="header-actions">
+        <div class="user-info" id="userInfo"></div>
+        <button id="logout-btn" class="btn btn-outline">Logout</button>
+      </div>
+    </div>
+
+        <!-- Main dashboard content for approved instructors -->
+        <div id="instructorContent" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>⏳ Pending Approvals</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">Student session requests awaiting your approval</p>
+                </div>
+                <ul id="pendingApprovals" class="list"></ul>
+                <p id="noPendingApprovals" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No pending approvals</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>✅ Approved Sessions / Schedule</h3>
+                </div>
+                <div class="table-container">
+                    <table id="approvedSessions">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Course / Topic</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p id="noApprovedSessions" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No approved sessions yet</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 All Sessions</h3>
+                </div>
+                <ul id="allSessions" class="list"></ul>
+                <p id="noSessions" class="text-center" style="color: var(--text-light); padding: 2rem; display: none;">No sessions yet</p>
+            </div>
+        </div>
+
+        <!-- Upload form for pending instructors -->
+        <div id="pendingInstructorUpload" class="card" style="display: none;">
+            <div class="card-header">
+                <h3>Complete Your Instructor Profile</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">Upload your certifications and demo materials to get approved</p>
+            </div>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="certifications">Certifications (PDF/Image)</label>
+                    <input type="file" id="certifications" name="certifications" multiple accept=".pdf,.jpg,.jpeg,.png">
+                    <small style="color: var(--text-light);">You can select multiple files</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="demo_material">Demo Materials (PDF/Image/Video)</label>
+                    <input type="file" id="demo_material" name="demo_material" multiple accept=".pdf,.jpg,.jpeg,.png,.mp4,.mov">
+                    <small style="color: var(--text-light);">You can select multiple files</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject_tags">Subjects you teach</label>
+                    <div id="subject_tags_container"></div>
+                    <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">Select all subjects you teach</small>
+                    <input type="hidden" id="subject_tags" name="subject_tags" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="education_level_tags">Education Levels you teach</label>
+                    <div id="education_level_tags_container"></div>
+                    <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">Select all education levels you teach</small>
+                    <input type="hidden" id="education_level_tags" name="education_level_tags" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Profile</button>
+            </form>
+            <p id="uploadMessage" class="message hidden"></p>
+        </div>
+    </div>
+
+    <script src="dashboard_instructor.js"></script>
+</body>
+
+</html>
