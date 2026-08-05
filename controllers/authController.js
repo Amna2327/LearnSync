@@ -41,23 +41,23 @@ export async function signup(req, res) {
 
         // Validate required fields
         if (!name || !email || !password || !role) {
-            return res.status(400).json({ 
-                error: "Missing required fields. Please provide name, email, password, and role." 
+            return res.status(400).json({
+                error: "Missing required fields. Please provide name, email, password, and role."
             });
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ 
-                error: "Invalid email format." 
+            return res.status(400).json({
+                error: "Invalid email format."
             });
         }
 
         // Validate role
         if (role !== "student" && role !== "instructor") {
-            return res.status(400).json({ 
-                error: "Invalid role. Role must be 'student' or 'instructor'." 
+            return res.status(400).json({
+                error: "Invalid role. Role must be 'student' or 'instructor'."
             });
         }
 
@@ -85,10 +85,10 @@ export async function signup(req, res) {
     } catch (err) {
         console.log("error in signup:", err.message);
         console.log("Full error:", err);
-        
+
         // Provide user-friendly error messages
         let errorMessage = err.message || "Signup failed. Please try again.";
-        
+
         // Map common database errors to user-friendly messages
         if (errorMessage.includes("Email already exists") || errorMessage.includes("already registered")) {
             errorMessage = "This email is already registered. Please use a different email or try logging in.";
@@ -101,22 +101,22 @@ export async function signup(req, res) {
         } else if (errorMessage.includes("Database not found") || errorMessage.includes("3D000")) {
             errorMessage = "Database 'learnsync_database' not found. Please create it first.";
         }
-        
+
         return res.status(400).json({ error: errorMessage });
     }
 }
-export async function logout(req, res){
-  try { 
-    // Clear the token cookie
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
-      sameSite: "strict"
-    });
+export async function logout(req, res) {
+    try {
+        // Clear the token cookie
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
+            sameSite: "strict"
+        });
 
-    res.json({ success: true, message: "Logged out successfully" });
-  } catch (err) {
-    console.error("Logout error:", err);
-    res.status(500).json({ success: false, error: "Failed to log out" });
-  }
+        res.json({ success: true, message: "Logged out successfully" });
+    } catch (err) {
+        console.error("Logout error:", err);
+        res.status(500).json({ success: false, error: "Failed to log out" });
+    }
 }

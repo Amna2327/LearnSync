@@ -68,7 +68,7 @@ async function filterInstructors() {
             "Content-Type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ subject_tags, time_zone })
+        body: JSON.stringify({ subject_tags: subjectsArray, time_zone })
     });
 
     const data = await response.json();
@@ -106,8 +106,6 @@ async function filterInstructors() {
     `;
         resultsDiv.appendChild(div);
     });
-
-
 }
 
 // -------------------- SELECT INSTRUCTOR --------------------
@@ -164,31 +162,53 @@ document.getElementById("submit_btn").onclick = submitSession;
 
 // -------------------- LOAD TIMEZONES AND DURATIONS --------------------
 document.addEventListener("DOMContentLoaded", async () => {
-    // Load timezones (editable dropdown)
-    const timeZoneInput = document.getElementById("time_zone");
-    const timeZoneDatalist = document.createElement("datalist");
-    timeZoneDatalist.id = "time_zone_list";
-    timeZoneInput.setAttribute("list", "time_zone_list");
-    timeZoneInput.setAttribute("placeholder", "Type or select timezone");
-    timeZoneInput.parentElement.appendChild(timeZoneDatalist);
-    
+    const timeZoneSelect = document.getElementById("time_zone");
+
     try {
-        const res = await fetch("../timezones.json");
+        const res = await fetch("/timezones.json");  // adjust if needed
+
+        if (!res.ok) {
+            throw new Error("Failed to load timezones");
+        }
+
         const timeZones = await res.json();
+
+        // Clear loading option
+        while (timeZoneSelect.firstChild) {
+            timeZoneSelect.removeChild(timeZoneSelect.firstChild);
+        }
+
+        // Add placeholder (no default selection)
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select a timezone (optional)";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        timeZoneSelect.appendChild(placeholder);
+
         timeZones.forEach(tz => {
             const option = document.createElement("option");
             option.value = tz.value;
             option.textContent = tz.label;
-            timeZoneDatalist.appendChild(option);
+            timeZoneSelect.appendChild(option);
         });
+
     } catch (err) {
         console.error("Error loading time zones:", err);
-        const option = document.createElement("option");
-        option.value = "UTC";
-        option.textContent = "UTC";
-        timeZoneDatalist.appendChild(option);
+
+        // Fallback
+        while (timeZoneSelect.firstChild) {
+            timeZoneSelect.removeChild(timeZoneSelect.firstChild);
+        }
+
+        const fallback = document.createElement("option");
+        fallback.value = "UTC";
+        fallback.textContent = "UTC (Default)";
+        fallback.selected = true;
+
+        timeZoneSelect.appendChild(fallback);
     }
-    
+
     // Load subject suggestions (editable dropdown)
     try {
         const { subjects } = await import('../shared/options.js');

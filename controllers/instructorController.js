@@ -106,11 +106,17 @@ export async function filterInstructors(req, res) {
 
         // Convert comma-separated string into array
         let subjectsArray = [];
-        if (subject_tags) {
+
+        if (Array.isArray(subject_tags)) {
+            // Already an array from frontend
+            subjectsArray = subject_tags;
+        } 
+        else if (typeof subject_tags === "string" && subject_tags.trim() !== "") {
+            // If still a comma string
             subjectsArray = subject_tags
                 .split(",")
                 .map(s => s.trim())
-                .filter(s => s.length > 0);
+                .filter(Boolean);
         }
 
         // Fetch instructors from DB
