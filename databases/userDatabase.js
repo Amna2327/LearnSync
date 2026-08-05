@@ -47,7 +47,7 @@ async function createUser(name, email, hashedPassword, role = 'student', timeZon
             constraint: err.constraint,
             stack: err.stack
         });
-        
+
         // Re-throw with more context for better error messages
         if (err.code === '23505') { // Unique violation
             throw new Error("Email already exists. Please use a different email.");
@@ -197,24 +197,24 @@ async function updateInstructorDetails(
              education_level_tags = $4,
              updated_at = now()
          WHERE instructor_id = $5`,
-         [certifications, demoMaterials, subjectTags, educationLevels, instructorId]
-        );
-    }
-    
-    
-    // Fetch student details
-    async function getStudentDetails(studentId) {
-        const { rows } = await pool.query(
+        [certifications, demoMaterials, subjectTags, educationLevels, instructorId]
+    );
+}
+
+
+// Fetch student details
+async function getStudentDetails(studentId) {
+    const { rows } = await pool.query(
         "SELECT * FROM student_details WHERE student_id = $1",
         [studentId]
     );
-    
+
     const data = rows[0] || null;
-    
+
     if (data && typeof data.subject_tags === "string") {
         data.subject_tags = JSON.parse(data.subject_tags);
     }
-    
+
     return data;
 }
 
@@ -243,7 +243,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
     const noSubjects = !subjectTags || subjectTags.length === 0;
 
     console.log("DB - getInstructorsByTags called with:", { time_zone, subjectTags });
-    
+
     // Case 1: No filters
     if (noTimezone && noSubjects) {
         return pool.query(
@@ -254,7 +254,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
             LIMIT 15`
         );
     }
-    
+
     // Case 2: Only timezone
     if (!noTimezone && noSubjects) {
         return pool.query(
@@ -263,13 +263,13 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
              JOIN instructor_details in_d ON u.id = in_d.instructor_id
              WHERE u.role = 'instructor' AND u.status = 'active'
              AND u.time_zone = $1`,
-             [time_zone]
-            );
-        }
-        
-        // Case 3: Only subject tags
-        if (noTimezone && !noSubjects) {
-            return pool.query(
+            [time_zone]
+        );
+    }
+
+    // Case 3: Only subject tags
+    if (noTimezone && !noSubjects) {
+        return pool.query(
             `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
             FROM users u
             JOIN instructor_details in_d ON u.id = in_d.instructor_id
@@ -278,7 +278,7 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
             [subjectTags]
         );
     }
-    
+
     // Case 4: Both filters
     return pool.query(
         `SELECT u.id, u.name, u.email, u.time_zone, in_d.subject_tags, in_d.education_level_tags,in_d.demo_material
@@ -287,10 +287,10 @@ async function getInstructorsByTags(subjectTags = [], time_zone = "") {
          WHERE u.role = 'instructor' AND u.status = 'active'
          AND u.time_zone = $1
          AND in_d.subject_tags && $2::text[]`,
-         [time_zone, subjectTags]
-        );
-    }
-    
+        [time_zone, subjectTags]
+    );
+}
+
 async function getStudentSessions(userId) {
     const { rows } = await pool.query(
         `SELECT 
@@ -309,13 +309,13 @@ async function getStudentSessions(userId) {
             LEFT JOIN meetings m
             ON m.session_id = s.session_id
             WHERE s.student_id = $1`,
-            [userId]
-        );
-        return rows;
-    }
-    
-    async function getInstructorSessions(userId) {
-        const { rows } = await pool.query(
+        [userId]
+    );
+    return rows;
+}
+
+async function getInstructorSessions(userId) {
+    const { rows } = await pool.query(
         `SELECT 
         s.session_id,
         s.description,
@@ -332,21 +332,21 @@ async function getStudentSessions(userId) {
          LEFT JOIN meetings m
            ON m.session_id = s.session_id
            WHERE s.instructor_id = $1`,
-           [userId]
-        );
-        return rows;
-    }
-    
-    
-    
-    // ============================
-    // PAY NOW / TRANSACTION HELPERS
-    // ============================
-    
-    // Get a session by ID
-    async function getSessionById(client, sessionId) {
-        const { rows } = await client.query(
-            `SELECT s.session_id, s.student_id, s.instructor_id, s.status,
+        [userId]
+    );
+    return rows;
+}
+
+
+
+// ============================
+// PAY NOW / TRANSACTION HELPERS
+// ============================
+
+// Get a session by ID
+async function getSessionById(client, sessionId) {
+    const { rows } = await client.query(
+        `SELECT s.session_id, s.student_id, s.instructor_id, s.status,
             start_time::text AS start_time, s.duration_minutes, s.description
             FROM sessions s
             WHERE s.session_id = $1`,
@@ -372,12 +372,12 @@ async function updatePaymentStatus(client, transactionId, newStatus) {
         SET status = $1
         WHERE transaction_id = $2
          RETURNING *`,
-         [newStatus, transactionId]
-        );
-        return rows[0] || null;
-    }
+        [newStatus, transactionId]
+    );
+    return rows[0] || null;
+}
 
-    
+
 // Get a free Zoom account (mock for now)
 async function getOverlappingMeetings(zoomAccountId, startTime, durationMinutes) {
     const { rows } = await pool.query(
@@ -437,7 +437,7 @@ export {
     getStudentDetails,
     insertStudentDetails,
     updateStudentDetails,
-    
+
     getInstructorsByTags,
     getStudentSessions,
     getInstructorSessions,

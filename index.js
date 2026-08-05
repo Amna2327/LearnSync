@@ -11,12 +11,12 @@ const app = express();
 
 // Test database connection on startup
 testConnection().catch(err => {
-    console.error("⚠️  Database connection test failed on startup:", err.message);
-    console.log("⚠️  The server will continue, but database operations may fail.");
+  console.error("⚠️  Database connection test failed on startup:", err.message);
+  console.log("⚠️  The server will continue, but database operations may fail.");
 });
 
 app.use(express.json());
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 import authRoutes from "./routes/authRoute.js";
 import { verifyToken } from "./middlewares/jwtMiddleware.js";
@@ -45,7 +45,7 @@ app.use("/admin", verifyToken, requireRole("admin"), adminRoutes);//for admins
 app.use("/instructor", verifyToken, requireRole("instructor"), instructorRoutes);//instructors
 app.use("/student", verifyToken, requireRole("student"), studentRoutes);
 app.use("/session", sessionRoutes);
- 
+
 // JWT token verified before controller is called.
 app.get("/dashboard", verifyToken, async (req, res) => {
   try {
@@ -93,7 +93,7 @@ app.get("/", (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Internal server error. Please try again later.',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
